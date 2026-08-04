@@ -1,0 +1,28 @@
+<view class="panel-mask" wx:if="{{show}}" bindtap="onClose">
+  <view class="panel" catchtap="noop">
+    <view class="panel-title">为 {{player.nickname}} 计分</view>
+    <view class="panel-avatar-row">
+      <image wx:if="{{player.avatar}}" class="panel-avatar" src="{{player.avatar}}" mode="aspectFill"></image>
+      <view wx:else class="panel-avatar panel-avatar-fallback" style="background: {{player.avatarColor}}">{{player.avatarText}}</view>
+    </view>
+
+    <view class="preset-row">
+      <view class="preset-chip plus {{selected === item && !customMode ? 'active' : ''}}" wx:for="{{presetPlus}}" wx:key="*this" data-value="{{item}}" bindtap="selectPreset">+{{item}}</view>
+    </view>
+    <view class="preset-row">
+      <view class="preset-chip minus {{selected === item && !customMode ? 'active' : ''}}" wx:for="{{presetMinus}}" wx:key="*this" data-value="{{item}}" bindtap="selectPreset">{{item}}</view>
+    </view>
+
+    <view class="custom-row">
+      <input class="input custom-input" type="number" placeholder="自定义分值" value="{{custom}}" bindinput="onCustomInput"></input>
+      <view class="sign-btn {{delta < 0 ? 'neg' : ''}}" bindtap="onToggleSign">{{delta < 0 ? '改为加分' : '改为减分'}}</view>
+    </view>
+
+    <view class="current-delta {{delta < 0 ? 'neg' : 'pos'}}">{{delta > 0 ? '+' : ''}}{{delta || 0}}</view>
+
+    <view class="panel-actions">
+      <button class="btn btn-ghost" bindtap="onClose">取消</button>
+      <button class="btn btn-primary" bindtap="onConfirm">确认计分</button>
+    </view>
+  </view>
+</view>

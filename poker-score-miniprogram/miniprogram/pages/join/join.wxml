@@ -1,0 +1,47 @@
+<view class="container join-page">
+  <view class="card">
+    <view class="page-title">{{isCreate ? '创建房间' : '加入房间'}}</view>
+
+    <block wx:if="{{isCreate}}">
+      <view class="field">
+        <view class="label">房间名称</view>
+        <input class="input" placeholder="例如：周六欢乐斗地主" value="{{roomName}}" bindinput="onNameInput" maxlength="20"></input>
+      </view>
+      <view class="field">
+        <view class="label">人数上限</view>
+        <picker range="{{maxOptions}}" value="{{maxIndex}}" bindchange="onMaxChange">
+          <view class="picker-value">{{maxPlayers}} 人</view>
+        </picker>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="room-summary" wx:if="{{room}}">
+        <view class="room-summary-name">{{room.name}}</view>
+        <view class="room-summary-meta">房间码 {{room.code}} · {{room.players.length}}/{{room.maxPlayers}} 人</view>
+      </view>
+      <view class="field">
+        <view class="label">房间码</view>
+        <input class="input code-input" value="{{roomCode}}" disabled="true"></input>
+      </view>
+    </block>
+
+    <view class="divider"></view>
+
+    <view class="field">
+      <view class="label">昵称</view>
+      <input class="input" type="nickname" placeholder="输入你的昵称" value="{{nickname}}" bindinput="onNickInput" maxlength="20"></input>
+    </view>
+    <view class="field">
+      <view class="label">头像（可选，不选则用首字头像）</view>
+      <view class="avatar-row">
+        <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+          <image wx:if="{{avatar}}" class="avatar-img" src="{{avatar}}" mode="aspectFill"></image>
+          <view wx:else class="avatar-fallback" style="background: {{avatarColor}}">{{avatarText}}</view>
+        </button>
+        <view class="avatar-tip">点击左侧按钮选择微信头像</view>
+      </view>
+    </view>
+
+    <button class="btn btn-primary btn-block submit-btn" bindtap="onSubmit" loading="{{submitting}}" disabled="{{submitting || !nickname}}">确认{{isCreate ? '创建' : '加入'}}</button>
+  </view>
+</view>

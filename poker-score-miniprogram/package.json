@@ -1,0 +1,7 @@
+{
+  "name": "poker-score-miniprogram",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "description": "打牌记账微信小程序（原生小程序 + 微信云开发）"
+}

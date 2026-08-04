@@ -1,0 +1,25 @@
+<view class="container settle-page">
+  <view class="settle-head">
+    <view class="settle-title">结算</view>
+    <view class="settle-room">{{room.name}}</view>
+    <view class="settle-meta">房间码 {{room.code}} · 共 {{playerList.length}} 人 · {{room.status === 'ended' ? '本局已结束' : '进行中预览'}}</view>
+  </view>
+
+  <view class="card podium">
+    <view class="podium-item {{index === 0 ? 'first' : ''}}" wx:for="{{playerList}}" wx:key="id">
+      <view class="rank">{{item.rankText}}</view>
+      <view class="podium-avatar-wrap">
+        <image wx:if="{{item.avatar}}" class="podium-avatar" src="{{item.avatar}}" mode="aspectFill"></image>
+        <view wx:else class="podium-avatar podium-avatar-fallback" style="background: {{item.avatarColor}}">{{item.avatarText}}</view>
+      </view>
+      <view class="podium-name">{{item.nickname}}</view>
+      <view class="podium-score {{item.score >= 0 ? 'pos' : 'neg'}}">{{item.score >= 0 ? '+' : ''}}{{item.score}}</view>
+    </view>
+  </view>
+
+  <button class="btn btn-primary btn-block" bindtap="onCopy">复制结算文案</button>
+  <button class="btn btn-ghost btn-block" bindtap="onRestart">再来一局</button>
+  <button class="btn btn-ghost btn-block" bindtap="onHome">返回首页</button>
+
+  <view class="pay-tip">结算提示：本小程序仅记录分数，请通过微信「收付款 / 转账」自行结算。</view>
+</view>

@@ -1,0 +1,9 @@
+﻿# 微信开发者工具本地私有配置（可能含本机 AppID 等）
+project.private.config.json
+
+node_modules/
+.vite/
+dist/
+*.log
+.env
+.env.*

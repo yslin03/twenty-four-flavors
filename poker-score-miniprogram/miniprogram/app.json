@@ -1,0 +1,19 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/join/join",
+    "pages/room/room",
+    "pages/settle/settle"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#0f1f19",
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "打牌记账",
+    "backgroundColor": "#0f1f19",
+    "backgroundTextStyle": "light"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+
+}

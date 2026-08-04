@@ -1,0 +1,10 @@
+<view class="player-card" bindtap="onTap">
+  <view class="player-avatar-wrap">
+    <image wx:if="{{player.avatar && !avatarFailed}}" class="player-avatar" src="{{player.avatar}}" mode="aspectFill" binderror="onAvatarError"></image>
+    <view wx:else class="player-avatar player-avatar-fallback" style="background: {{player.avatarColor}}">{{player.avatarText}}</view>
+    <view wx:if="{{player.id === hostOpenId}}" class="host-badge">房主</view>
+    <view wx:if="{{player.id === myId}}" class="me-badge">我</view>
+  </view>
+  <view class="player-name">{{player.nickname}}</view>
+  <view class="player-score {{player.score >= 0 ? 'pos' : 'neg'}}">{{player.score >= 0 ? '+' : ''}}{{player.score}}</view>
+</view>

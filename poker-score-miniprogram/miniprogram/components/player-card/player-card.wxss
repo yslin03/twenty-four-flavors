@@ -1,0 +1,63 @@
+.player-card {
+  width: 33.33%;
+  box-sizing: border-box;
+  padding: 40rpx 12rpx 16rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.player-avatar-wrap {
+  position: relative;
+}
+.player-avatar {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: 50%;
+  border: 4rpx solid rgba(255, 255, 255, 0.25);
+  box-sizing: border-box;
+}
+.player-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 52rpx;
+  font-weight: 700;
+  color: #062018;
+}
+.host-badge {
+  position: absolute;
+  top: -8rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--gold);
+  color: #3a2a08;
+  font-size: 18rpx;
+  padding: 2rpx 12rpx;
+  border-radius: 999rpx;
+  white-space: nowrap;
+}
+.me-badge {
+  position: absolute;
+  bottom: -8rpx;
+  right: -8rpx;
+  background: var(--accent);
+  color: #062018;
+  font-size: 18rpx;
+  padding: 2rpx 10rpx;
+  border-radius: 999rpx;
+  white-space: nowrap;
+}
+.player-name {
+  margin-top: 14rpx;
+  font-size: 26rpx;
+  max-width: 200rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.player-score {
+  margin-top: 6rpx;
+  font-size: 40rpx;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}

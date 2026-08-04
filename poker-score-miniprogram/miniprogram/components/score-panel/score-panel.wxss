@@ -1,0 +1,113 @@
+.panel-mask {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(4, 12, 9, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+.panel {
+  width: 600rpx;
+  box-sizing: border-box;
+  background: var(--surface);
+  border-radius: 28rpx;
+  padding: 40rpx;
+}
+.panel-title {
+  text-align: center;
+  font-size: 34rpx;
+  font-weight: 700;
+}
+.panel-avatar-row {
+  text-align: center;
+  margin: 24rpx 0 8rpx;
+}
+.panel-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+}
+.panel-avatar-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #062018;
+  box-sizing: border-box;
+}
+.preset-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 20rpx;
+}
+.preset-chip {
+  width: 150rpx;
+  height: 76rpx;
+  line-height: 76rpx;
+  text-align: center;
+  border-radius: 16rpx;
+  margin: 0 12rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+  background: var(--surface-2);
+  border: 1rpx solid var(--border);
+  box-sizing: border-box;
+}
+.preset-chip.plus.active {
+  background: var(--accent);
+  color: #062018;
+  border-color: var(--accent);
+}
+.preset-chip.minus.active {
+  background: var(--danger);
+  color: #ffffff;
+  border-color: var(--danger);
+}
+.custom-row {
+  display: flex;
+  align-items: center;
+  margin-top: 24rpx;
+}
+.custom-input {
+  flex: 1;
+}
+.sign-btn {
+  width: 180rpx;
+  height: 88rpx;
+  line-height: 88rpx;
+  text-align: center;
+  border-radius: 16rpx;
+  font-size: 26rpx;
+  margin-left: 16rpx;
+  background: var(--surface-2);
+  border: 1rpx solid var(--border);
+  box-sizing: border-box;
+}
+.sign-btn.neg {
+  color: var(--danger);
+}
+.current-delta {
+  text-align: center;
+  font-size: 56rpx;
+  font-weight: 800;
+  margin: 24rpx 0;
+}
+.current-delta.pos {
+  color: var(--accent);
+}
+.current-delta.neg {
+  color: var(--danger);
+}
+.panel-actions {
+  display: flex;
+  justify-content: space-between;
+}
+.panel-actions .btn {
+  width: 240rpx;
+  margin: 0;
+}

@@ -1,0 +1,9 @@
+{
+  "name": "getRoomQrcode",
+  "version": "1.0.0",
+  "description": "生成带房间码的小程序码并存入云存储",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

@@ -1,0 +1,64 @@
+.hero {
+  padding: 48rpx 8rpx 44rpx;
+  text-align: center;
+}
+.hero-badge {
+  font-size: 22rpx;
+  color: var(--gold);
+  letter-spacing: 2rpx;
+  opacity: 0.9;
+  margin-bottom: 20rpx;
+}
+.hero-title {
+  font-size: 64rpx;
+  font-weight: 800;
+  letter-spacing: 6rpx;
+}
+.hero-sub {
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  color: var(--muted);
+}
+.actions {
+  display: flex;
+  flex-direction: column;
+}
+.join-row {
+  display: flex;
+  margin-top: 24rpx;
+}
+.join-input {
+  flex: 1;
+}
+.join-btn {
+  width: 200rpx;
+  height: 88rpx;
+  line-height: 88rpx;
+  margin-left: 20rpx;
+}
+.demo-btn {
+  margin-top: 24rpx;
+}
+.recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+  padding: 28rpx;
+}
+.recent-name {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+.recent-meta {
+  font-size: 24rpx;
+  color: var(--muted);
+  margin-top: 6rpx;
+}
+.recent-status {
+  font-size: 24rpx;
+  color: var(--accent);
+}
+.recent-status.is-ended {
+  color: var(--muted);
+}

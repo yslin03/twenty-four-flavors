@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "房间",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "light",
+  "usingComponents": {
+    "player-card": "/components/player-card/player-card",
+    "score-panel": "/components/score-panel/score-panel"
+  }
+}

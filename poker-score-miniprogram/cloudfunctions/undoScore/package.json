@@ -1,0 +1,9 @@
+{
+  "name": "undoScore",
+  "version": "1.0.0",
+  "description": "撤销最后一笔计分（事务）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}
