@@ -76,3 +76,78 @@
 .settle-page .btn {
   margin-top: 20rpx;
 }
+.transfer-card {
+  margin-top: 32rpx;
+  margin-bottom: 40rpx;
+}
+.transfer-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 24rpx;
+}
+.rate-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 28rpx;
+}
+.rate-label,
+.rate-unit {
+  font-size: 30rpx;
+  color: var(--muted);
+}
+.rate-label { margin-right: 16rpx; }
+.rate-unit { margin-left: 16rpx; }
+.rate-input {
+  width: 180rpx;
+  background: var(--surface-2);
+  border: 1rpx solid var(--border);
+  border-radius: 16rpx;
+  height: 80rpx;
+  padding: 0 24rpx;
+  color: var(--text);
+  font-size: 32rpx;
+  font-weight: 700;
+  text-align: center;
+  box-sizing: border-box;
+}
+.transfer-empty {
+  font-size: 28rpx;
+  color: var(--muted);
+  text-align: center;
+  padding: 24rpx 0;
+}
+.transfer-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid var(--border);
+}
+.transfer-item:last-child {
+  border-bottom: none;
+}
+.transfer-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  max-width: 200rpx;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.transfer-from { color: var(--danger); }  /* 欠款方：红 */
+.transfer-to   { color: var(--accent); }  /* 收款方：绿 */
+.transfer-arrow {
+  margin: 0 16rpx;
+  color: var(--muted);
+}
+.transfer-amount {
+  flex: 1;
+  text-align: right;
+  font-size: 36rpx;
+  font-weight: 800;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+.transfer-copy {
+  margin-top: 28rpx;
+}

@@ -17,9 +17,30 @@
     </view>
   </view>
 
-  <button class="btn btn-primary btn-block" bindtap="onCopy">复制结算文案</button>
+  <view class="card transfer-card">
+    <view class="transfer-title">优化转账清单</view>
+
+    <view class="rate-row">
+      <text class="rate-label">1 分 =</text>
+      <input class="rate-input" type="digit" value="{{rate}}" bindinput="onRateInput" bindblur="onRateBlur" placeholder="1" />
+      <text class="rate-unit">元</text>
+    </view>
+
+    <view class="transfer-empty" wx:if="{{!transfers.length}}">无需转账，已全部结清</view>
+
+    <view class="transfer-item" wx:for="{{transfers}}" wx:key="key">
+      <view class="transfer-name transfer-from">{{item.fromName}}</view>
+      <view class="transfer-arrow">→</view>
+      <view class="transfer-name transfer-to">{{item.toName}}</view>
+      <view class="transfer-amount">{{item.amountText}}</view>
+    </view>
+
+    <button class="btn btn-primary btn-block transfer-copy" bindtap="onCopyTransfer">复制转账清单</button>
+  </view>
+
+  <button class="btn btn-ghost btn-block" bindtap="onCopy">复制结算文案</button>
   <button class="btn btn-ghost btn-block" bindtap="onRestart">再来一局</button>
   <button class="btn btn-ghost btn-block" bindtap="onHome">返回首页</button>
 
-  <view class="pay-tip">结算提示：本小程序仅记录分数，请通过微信「收付款 / 转账」自行结算。</view>
+  <view class="pay-tip">结算提示：本小程序仅记录分数。按「1 分 = X 元」生成优化转账清单，请通过微信「收付款 / 转账」完成以上款项。</view>
 </view>

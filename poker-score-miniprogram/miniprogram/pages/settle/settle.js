@@ -5,7 +5,10 @@ Page({
   data: {
     room: null,
     playerList: [],
-    summary: ''
+    summary: '',
+    rate: '1',        // 1 分 = 几元，字符串以兼容 input
+    transfers: [],    // 转账列表
+    transferText: ''  // 复制用的文案
   },
 
   async onLoad(options) {
@@ -39,6 +42,37 @@ Page({
       summary: roomUtil.buildSettlementText(room)
     })
     store.saveRecentRoom(room)
+    this.recomputeTransfers()
+  },
+
+  recomputeTransfers() {
+    const room = this.data.room
+    const playerList = this.data.playerList || []
+    if (!room || !playerList.length) {
+      this.setData({ transfers: [], transferText: '' })
+      return
+    }
+    const result = roomUtil.buildTransfers(playerList, this.data.rate)
+    this.setData({
+      transfers: result.transfers,
+      transferText: roomUtil.buildTransferText(room.name, result, this.data.rate)
+    })
+  },
+
+  onRateInput(e) {
+    this.setData({ rate: String(e.detail.value || '') }, () => this.recomputeTransfers())
+  },
+
+  onRateBlur(e) {
+    // 失焦时归一化：空/非法回退为 1
+    const v = String(e.detail.value || '').trim()
+    const rate = (v && isFinite(Number(v)) && Number(v) > 0) ? v : '1'
+    this.setData({ rate }, () => this.recomputeTransfers())
+  },
+
+  onCopyTransfer() {
+    if (!this.data.transferText) return
+    wx.setClipboardData({ data: this.data.transferText })
   },
 
   onCopy() {
