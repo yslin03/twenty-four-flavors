@@ -1,4 +1,5 @@
 .settle-page {
+  position: relative;
   padding-top: 48rpx;
   padding-bottom: 64rpx;
 }
@@ -7,9 +8,9 @@
   margin-bottom: 32rpx;
 }
 .settle-title {
-  font-size: 56rpx;
-  font-weight: 800;
-  letter-spacing: 4rpx;
+  font-size: 58rpx;
+  font-weight: 700;
+  letter-spacing: -2rpx;
 }
 .settle-room {
   margin-top: 16rpx;
@@ -19,6 +20,16 @@
   font-size: 24rpx;
   color: var(--muted);
   margin-top: 8rpx;
+}
+.virtual-badge {
+  display: inline-block;
+  margin-top: 16rpx;
+  padding: 6rpx 24rpx;
+  font-size: 22rpx;
+  color: var(--accent);
+  background: rgba(53, 201, 142, 0.14);
+  border: none;
+  border-radius: 999rpx;
 }
 .podium {
   padding: 16rpx 32rpx;
@@ -34,8 +45,8 @@
   border-bottom: none;
 }
 .podium-item.first {
-  background: rgba(242, 193, 78, 0.08);
-  border-radius: 16rpx;
+  background: rgba(242, 193, 78, 0.12);
+  border-radius: 20rpx;
   padding: 20rpx 16rpx;
 }
 .rank {
@@ -76,78 +87,85 @@
 .settle-page .btn {
   margin-top: 20rpx;
 }
-.transfer-card {
-  margin-top: 32rpx;
-  margin-bottom: 40rpx;
-}
-.transfer-title {
-  font-size: 28rpx;
-  font-weight: 700;
-  color: var(--text);
+.stats {
   margin-bottom: 24rpx;
 }
-.rate-row {
+.stats-item {
   display: flex;
   align-items: center;
-  margin-bottom: 28rpx;
-}
-.rate-label,
-.rate-unit {
-  font-size: 30rpx;
-  color: var(--muted);
-}
-.rate-label { margin-right: 16rpx; }
-.rate-unit { margin-left: 16rpx; }
-.rate-input {
-  width: 180rpx;
-  background: var(--surface-2);
-  border: 1rpx solid var(--border);
-  border-radius: 16rpx;
-  height: 80rpx;
-  padding: 0 24rpx;
-  color: var(--text);
-  font-size: 32rpx;
-  font-weight: 700;
-  text-align: center;
-  box-sizing: border-box;
-}
-.transfer-empty {
-  font-size: 28rpx;
-  color: var(--muted);
-  text-align: center;
-  padding: 24rpx 0;
-}
-.transfer-item {
-  display: flex;
-  align-items: center;
-  padding: 20rpx 0;
+  justify-content: space-between;
+  padding: 18rpx 0;
   border-bottom: 1rpx solid var(--border);
 }
-.transfer-item:last-child {
+.stats-item:last-child {
   border-bottom: none;
 }
-.transfer-name {
+.stats-name {
   font-size: 30rpx;
   font-weight: 600;
-  max-width: 200rpx;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
-.transfer-from { color: var(--danger); }  /* 欠款方：红 */
-.transfer-to   { color: var(--accent); }  /* 收款方：绿 */
-.transfer-arrow {
-  margin: 0 16rpx;
+.stats-meta {
+  font-size: 24rpx;
   color: var(--muted);
+  margin-top: 6rpx;
 }
-.transfer-amount {
-  flex: 1;
-  text-align: right;
+.stats-total {
   font-size: 36rpx;
   font-weight: 800;
-  color: var(--gold);
   font-variant-numeric: tabular-nums;
 }
-.transfer-copy {
-  margin-top: 28rpx;
+.stats-rank {
+  display: inline-block;
+  margin-left: 12rpx;
+  font-size: 22rpx;
+  color: var(--accent);
+  background: rgba(53, 201, 142, 0.14);
+  border-radius: 999rpx;
+  padding: 2rpx 14rpx;
+  vertical-align: middle;
+}
+.history-btn {
+  margin-top: 24rpx;
+}
+.history-modal {
+  width: 640rpx;
+}
+.history-scroll {
+  max-height: 60vh;
+}
+.history-game {
+  background: var(--surface-2);
+  border-radius: 16rpx;
+  padding: 20rpx;
+  margin-bottom: 16rpx;
+}
+.history-game-head {
+  font-size: 24rpx;
+  color: var(--muted);
+  margin-bottom: 10rpx;
+}
+.history-game-row {
+  display: flex;
+  align-items: center;
+  font-size: 28rpx;
+  padding: 6rpx 0;
+}
+.history-game-rank {
+  width: 110rpx;
+  color: var(--muted);
+  font-size: 24rpx;
+}
+.history-game-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.history-game-score {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.history-empty {
+  text-align: center;
+  padding: 40rpx 0;
 }

@@ -1,14 +1,15 @@
+<view class="theme-root">
 <view class="container index-page">
   <view class="hero">
-    <view class="hero-badge">扑克 · 斗地主 · 掼蛋 · 德州</view>
-    <view class="hero-title">打牌记账</view>
-    <view class="hero-sub">建房邀请好友，点击头像实时计分，结束一键结算</view>
+    <view class="hero-badge">棋牌 · 桌游 · 聚会娱乐</view>
+    <view class="hero-title">牌局记分</view>
+    <view class="hero-sub">建房邀请好友，点击头像实时记分，结束一键查看记分结果</view>
   </view>
 
   <view class="card actions">
     <button class="btn btn-primary btn-block" bindtap="onCreate">创建房间</button>
     <view class="join-row">
-      <input class="input join-input" placeholder="输入 6 位房间码" value="{{roomCodeInput}}" bindinput="onCodeInput" maxlength="6"></input>
+      <input class="input join-input" placeholder="输入 4 位房间码" value="{{roomCodeInput}}" bindinput="onCodeInput" maxlength="4"></input>
       <button class="btn btn-ghost join-btn" bindtap="onJoin">加入</button>
     </view>
     <button wx:if="{{showDemo}}" class="btn btn-ghost btn-block demo-btn" bindtap="onDemo">快速演示（建房 + 模拟玩家）</button>
@@ -24,4 +25,5 @@
       <view class="recent-status {{item.status === 'ended' ? 'is-ended' : ''}}">{{item.status === 'ended' ? '已结束' : '进行中'}}</view>
     </view>
   </view>
+</view>
 </view>

@@ -1,10 +1,27 @@
-<view class="room-page">
+<view class="theme-root room-page">
   <view class="room-header">
     <view class="room-header-info">
       <view class="room-name">{{room.name}}</view>
       <view class="room-meta">房间码 {{room.code}} · {{room.players.length}}/{{room.maxPlayers}} 人 · {{room.status === 'ended' ? '已结束' : '进行中'}}</view>
     </view>
     <button class="mini-btn" bindtap="onInvite">邀请</button>
+  </view>
+
+  <view class="rate-row" wx:if="{{isHost}}">
+    <view class="rate-label">积分倍率</view>
+    <view
+      class="rate-chip {{room.rate === item ? 'active' : ''}}"
+      wx:for="{{rateOptions}}"
+      wx:key="*this"
+      data-rate="{{item}}"
+      bindtap="onRateTap"
+    >×{{item}}</view>
+    <view class="rate-chip {{customRateMode || customRateActive ? 'active' : ''}}" bindtap="onRateCustom">自定义</view>
+  </view>
+
+  <view class="rate-custom-row" wx:if="{{isHost && customRateMode}}">
+    <input class="input rate-input" type="digit" placeholder="输入倍率，如 3 或 1.5" value="{{customRate}}" bindinput="onRateInput" />
+    <button class="mini-btn rate-confirm" bindtap="onRateCustomConfirm">确定</button>
   </view>
 
   <view class="table">
@@ -21,22 +38,26 @@
           bind:tap="onPlayerTap"
         ></player-card>
       </view>
-      <view class="table-tip">点击玩家头像计分</view>
+      <view class="table-tip">点击玩家头像记分（点自己的头像可修改昵称）</view>
     </view>
   </view>
 
   <view class="toolbar">
-    <button class="tool-btn" bindtap="onUndo">撤销</button>
+    <button wx:if="{{isHost}}" class="tool-btn" bindtap="onUndo">撤销</button>
     <button class="tool-btn" bindtap="onRefresh">刷新</button>
-    <button class="tool-btn tool-danger" bindtap="onEnd">结束本局</button>
+    <button wx:if="{{isHost}}" class="tool-btn tool-danger" bindtap="onEnd">结束本局</button>
+    <button class="tool-btn" bindtap="onVoiceToggle">{{voiceOn ? '🔊 语音开' : '🔇 语音关'}}</button>
   </view>
 
   <view class="history-preview" wx:if="{{historyPreview.length}}">
     <view class="section-title">最近计分</view>
-    <view class="history-item" wx:for="{{historyPreview}}" wx:key="ts">{{item.text}}</view>
+    <view class="history-item" wx:for="{{historyPreview}}" wx:key="ts">
+      <text>{{item.text}}</text>
+      <text class="history-time">{{item.time}}</text>
+    </view>
   </view>
 
-  <score-panel wx:if="{{panel.show}}" show="{{panel.show}}" player="{{panel.player}}" bind:confirm="onScoreConfirm" bind:close="onPanelClose"></score-panel>
+  <score-panel wx:if="{{panel.show}}" show="{{panel.show}}" player="{{panel.player}}" rate="{{room.rate}}" bind:confirm="onScoreConfirm" bind:close="onPanelClose"></score-panel>
 
   <view class="modal-mask" wx:if="{{invite.show}}" bindtap="onInviteClose">
     <view class="modal invite-modal" catchtap="noop">
@@ -47,13 +68,27 @@
 
       <view class="qr-wrap" wx:if="{{invite.fileID}}">
         <image class="qr-img" src="{{invite.fileID}}" mode="aspectFit" bindtap="onSaveQr"></image>
-        <view class="qr-tip">点击保存小程序码，好友微信扫一扫即可加入</view>
+        <view class="qr-tip">保存小程序码，好友用微信「扫一扫」即可加入</view>
       </view>
       <view class="qr-tip" wx:elif="{{invite.qrError}}">{{invite.qrError}}</view>
-      <view class="qr-loading" wx:else>{{invite.qrLoading ? '生成小程序码中…' : '本地模式下暂不支持小程序码，请用房间码或转发邀请'}}</view>
+      <view class="qr-loading" wx:else>{{invite.qrLoading ? '生成小程序码中…' : ''}}</view>
 
       <button class="btn btn-primary btn-block" open-type="share">转发给好友</button>
       <button class="btn btn-ghost btn-block close-btn" bindtap="onInviteClose">关闭</button>
     </view>
   </view>
+
+  <view class="modal-mask" wx:if="{{nicknameModal.show}}" bindtap="onNicknameClose">
+    <view class="modal" catchtap="noop">
+      <view class="modal-title">修改昵称</view>
+      <view class="field">
+        <input class="input" type="nickname" placeholder="输入新昵称" value="{{nicknameInput}}" bindinput="onNicknameInput" maxlength="20"></input>
+      </view>
+      <view class="nickname-actions">
+        <button class="btn btn-ghost" bindtap="onNicknameClose">取消</button>
+        <button class="btn btn-primary" bindtap="onNicknameSave">保存</button>
+      </view>
+    </view>
+  </view>
+
 </view>

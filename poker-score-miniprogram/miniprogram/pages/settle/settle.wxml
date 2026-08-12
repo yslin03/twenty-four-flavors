@@ -1,8 +1,9 @@
-<view class="container settle-page">
+<view class="theme-root"><view class="container settle-page">
   <view class="settle-head">
-    <view class="settle-title">结算</view>
+    <view class="settle-title">记分结果</view>
     <view class="settle-room">{{room.name}}</view>
-    <view class="settle-meta">房间码 {{room.code}} · 共 {{playerList.length}} 人 · {{room.status === 'ended' ? '本局已结束' : '进行中预览'}}</view>
+    <view class="settle-meta">房间码 {{room.code}} · 共 {{playerList.length}} 人 · {{room.status === 'ended' ? '本局已完成' : '实时记分中'}}</view>
+    <view class="virtual-badge">虚拟积分 · 仅供娱乐记录</view>
   </view>
 
   <view class="card podium">
@@ -13,34 +14,43 @@
         <view wx:else class="podium-avatar podium-avatar-fallback" style="background: {{item.avatarColor}}">{{item.avatarText}}</view>
       </view>
       <view class="podium-name">{{item.nickname}}</view>
-      <view class="podium-score {{item.score >= 0 ? 'pos' : 'neg'}}">{{item.score >= 0 ? '+' : ''}}{{item.score}}</view>
+      <view class="podium-score {{item.score >= 0 ? 'pos' : 'neg'}}">{{item.score >= 0 ? '+' : ''}}{{item.score}} 积分</view>
     </view>
   </view>
 
-  <view class="card transfer-card">
-    <view class="transfer-title">优化转账清单</view>
-
-    <view class="rate-row">
-      <text class="rate-label">1 分 =</text>
-      <input class="rate-input" type="digit" value="{{rate}}" bindinput="onRateInput" bindblur="onRateBlur" placeholder="1" />
-      <text class="rate-unit">元</text>
+  <view class="card stats" wx:if="{{statsList.length}}">
+    <view class="section-title">历史战绩</view>
+    <view class="stats-item" wx:for="{{statsList}}" wx:key="id">
+      <view class="stats-main">
+        <view class="stats-name">{{item.nickname}} <text class="stats-rank">{{item.rankText}}</text></view>
+        <view class="stats-meta">局数 {{item.games}} · 胜 {{item.wins}} · 负 {{item.losses}} · 胜率 {{item.rate}}%</view>
+      </view>
+      <view class="stats-total {{item.total >= 0 ? 'pos' : 'neg'}}">{{item.total >= 0 ? '+' : ''}}{{item.total}} 分</view>
     </view>
-
-    <view class="transfer-empty" wx:if="{{!transfers.length}}">无需转账，已全部结清</view>
-
-    <view class="transfer-item" wx:for="{{transfers}}" wx:key="key">
-      <view class="transfer-name transfer-from">{{item.fromName}}</view>
-      <view class="transfer-arrow">→</view>
-      <view class="transfer-name transfer-to">{{item.toName}}</view>
-      <view class="transfer-amount">{{item.amountText}}</view>
-    </view>
-
-    <button class="btn btn-primary btn-block transfer-copy" bindtap="onCopyTransfer">复制转账清单</button>
+    <button class="btn btn-ghost btn-block history-btn" bindtap="onHistoryOpen">查看历史战绩</button>
   </view>
 
-  <button class="btn btn-ghost btn-block" bindtap="onCopy">复制结算文案</button>
+  <button class="btn btn-ghost btn-block" bindtap="onCopy">复制记分结果</button>
   <button class="btn btn-ghost btn-block" bindtap="onRestart">再来一局</button>
   <button class="btn btn-ghost btn-block" bindtap="onHome">返回首页</button>
 
-  <view class="pay-tip">结算提示：本小程序仅记录分数。按「1 分 = X 元」生成优化转账清单，请通过微信「收付款 / 转账」完成以上款项。</view>
-</view>
+  <view class="pay-tip">温馨提示：本小程序仅供亲友聚会娱乐使用，所有分数均为虚拟积分，不具任何实际价值，请文明娱乐、理性游戏。</view>
+
+  <view class="modal-mask" wx:if="{{historyModal.show}}" bindtap="onHistoryClose">
+    <view class="modal history-modal" catchtap="noop">
+      <view class="modal-title">历史战绩</view>
+      <scroll-view scroll-y class="history-scroll">
+        <view class="history-game" wx:for="{{historyList}}" wx:key="roomId" wx:for-item="game">
+          <view class="history-game-head">{{game.date}} · {{game.roomName}}</view>
+          <view class="history-game-row" wx:for="{{game.players}}" wx:key="id" wx:for-item="pl">
+            <text class="history-game-rank">{{pl.rankText}}</text>
+            <text class="history-game-name">{{pl.nickname}}</text>
+            <text class="history-game-score {{pl.score >= 0 ? 'pos' : 'neg'}}">{{pl.score >= 0 ? '+' : ''}}{{pl.score}}</text>
+          </view>
+        </view>
+        <view wx:if="{{!historyList.length}}" class="muted history-empty">暂无历史战绩</view>
+      </scroll-view>
+      <button class="btn btn-ghost btn-block close-btn" bindtap="onHistoryClose">关闭</button>
+    </view>
+  </view>
+</view></view>

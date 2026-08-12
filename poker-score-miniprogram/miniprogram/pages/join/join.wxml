@@ -1,4 +1,4 @@
-<view class="container join-page">
+<view class="theme-root"><view class="container join-page">
   <view class="card">
     <view class="page-title">{{isCreate ? '创建房间' : '加入房间'}}</view>
 
@@ -44,4 +44,4 @@
 
     <button class="btn btn-primary btn-block submit-btn" bindtap="onSubmit" loading="{{submitting}}" disabled="{{submitting || !nickname}}">确认{{isCreate ? '创建' : '加入'}}</button>
   </view>
-</view>
+</view></view>

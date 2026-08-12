@@ -1,7 +1,7 @@
 {
-  "name": "endRoom",
+  "name": "setRoomRate",
   "version": "1.0.0",
-  "description": "结束房间并保存记分快照",
+  "description": "修改打牌房间积分倍率（仅房主）",
   "main": "index.js",
   "dependencies": {
     "wx-server-sdk": "~2.6.3"

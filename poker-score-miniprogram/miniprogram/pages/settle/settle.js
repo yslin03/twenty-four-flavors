@@ -1,14 +1,20 @@
 const store = require('../../utils/store')
 const roomUtil = require('../../utils/room')
 
+function formatDate(value) {
+  const d = new Date(Number(value) || Date.now())
+  const pad = n => String(n).padStart(2, '0')
+  return pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes())
+}
+
 Page({
   data: {
     room: null,
     playerList: [],
     summary: '',
-    rate: '1',        // 1 分 = 几元，字符串以兼容 input
-    transfers: [],    // 转账列表
-    transferText: ''  // 复制用的文案
+    statsList: [],
+    historyModal: { show: false },
+    historyList: []
   },
 
   async onLoad(options) {
@@ -17,7 +23,7 @@ Page({
       wx.navigateBack()
       return
     }
-    wx.showLoading({ title: '加载结算', mask: true })
+    wx.showLoading({ title: '加载记分结果', mask: true })
     const room = await store.getRoom(code)
     wx.hideLoading()
     if (!room) {
@@ -34,50 +40,58 @@ Page({
       avatar: roomUtil.playerAvatar(p),
       avatarColor: roomUtil.avatarColor(p.nickname),
       avatarText: roomUtil.avatarText(p.nickname),
-      rankText: ['🥇', '🥈', '🥉'][i] || `${i + 1}.`
+      rankText: `第${i + 1}名`
     }))
+    const statsMap = {}
+    store.getPlayerStats().forEach(s => { statsMap[s.id] = s })
+    const statsList = playerList.map(p => {
+      const s = statsMap[p.id] || { games: 0, wins: 0, losses: 0, total: 0, rate: 0 }
+      return {
+        id: p.id,
+        nickname: p.nickname,
+        games: s.games,
+        wins: s.wins,
+        losses: s.losses || 0,
+        rate: s.rate,
+        total: s.total
+      }
+    }).sort((a, b) => b.total - a.total)
+      .map((item, i) => ({ ...item, rankText: '第' + (i + 1) + '名' }))
     this.setData({
       room,
       playerList,
-      summary: roomUtil.buildSettlementText(room)
+      summary: roomUtil.buildSettlementText(room),
+      statsList
     })
     store.saveRecentRoom(room)
-    this.recomputeTransfers()
-  },
-
-  recomputeTransfers() {
-    const room = this.data.room
-    const playerList = this.data.playerList || []
-    if (!room || !playerList.length) {
-      this.setData({ transfers: [], transferText: '' })
-      return
-    }
-    const result = roomUtil.buildTransfers(playerList, this.data.rate)
-    this.setData({
-      transfers: result.transfers,
-      transferText: roomUtil.buildTransferText(room.name, result, this.data.rate)
-    })
-  },
-
-  onRateInput(e) {
-    this.setData({ rate: String(e.detail.value || '') }, () => this.recomputeTransfers())
-  },
-
-  onRateBlur(e) {
-    // 失焦时归一化：空/非法回退为 1
-    const v = String(e.detail.value || '').trim()
-    const rate = (v && isFinite(Number(v)) && Number(v) > 0) ? v : '1'
-    this.setData({ rate }, () => this.recomputeTransfers())
-  },
-
-  onCopyTransfer() {
-    if (!this.data.transferText) return
-    wx.setClipboardData({ data: this.data.transferText })
   },
 
   onCopy() {
     if (!this.data.summary) return
     wx.setClipboardData({ data: this.data.summary })
+  },
+
+  onHistoryOpen() {
+    const list = store.getSettlements().slice().reverse()
+    const historyList = list.map(s => {
+      const players = (s.players || []).slice().sort((a, b) => (s.finalScores[b.id] || 0) - (s.finalScores[a.id] || 0))
+      return {
+        roomId: s.roomId,
+        roomName: s.roomName || '牌局',
+        date: formatDate(s.finishedAt),
+        players: players.map((p, i) => ({
+          id: p.id,
+          nickname: p.nickname || '玩家',
+          rankText: '第' + (i + 1) + '名',
+          score: s.finalScores[p.id] || 0
+        }))
+      }
+    })
+    this.setData({ historyModal: { show: true }, historyList })
+  },
+
+  onHistoryClose() {
+    this.setData({ historyModal: { show: false } })
   },
 
   onRestart() {
@@ -94,7 +108,8 @@ Page({
             id: p.id,
             openid: p.openid || p.id,
             nickname: p.nickname,
-            avatar: roomUtil.playerAvatar(p)
+            avatar: roomUtil.playerAvatar(p),
+            seat: Number.isInteger(p.seat) ? p.seat : -1
           }))
           const created = await store.createRoom({
             name: room.name,

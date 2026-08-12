@@ -1,22 +1,23 @@
 .hero {
-  padding: 48rpx 8rpx 44rpx;
-  text-align: center;
+  padding: 52rpx 12rpx 46rpx;
+  text-align: left;
 }
+.index-page { position: relative; }
 .hero-badge {
-  font-size: 22rpx;
-  color: var(--gold);
-  letter-spacing: 2rpx;
+  font-size: 26rpx;
+  color: var(--accent);
+  letter-spacing: 0;
   opacity: 0.9;
   margin-bottom: 20rpx;
 }
 .hero-title {
-  font-size: 64rpx;
-  font-weight: 800;
-  letter-spacing: 6rpx;
+  font-size: 62rpx;
+  font-weight: 700;
+  letter-spacing: -2rpx;
 }
 .hero-sub {
   margin-top: 16rpx;
-  font-size: 26rpx;
+  font-size: 30rpx;
   color: var(--muted);
 }
 .actions {
@@ -44,14 +45,14 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20rpx;
-  padding: 28rpx;
+  padding: 30rpx;
 }
 .recent-name {
-  font-size: 30rpx;
+  font-size: 34rpx;
   font-weight: 600;
 }
 .recent-meta {
-  font-size: 24rpx;
+  font-size: 26rpx;
   color: var(--muted);
   margin-top: 6rpx;
 }

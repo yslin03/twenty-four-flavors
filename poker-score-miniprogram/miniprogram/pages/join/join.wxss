@@ -1,16 +1,18 @@
 .page-title {
-  font-size: 40rpx;
+  font-size: 48rpx;
   font-weight: 700;
+  letter-spacing: -1rpx;
   margin-bottom: 32rpx;
 }
+.join-page { position: relative; }
 .room-summary {
   background: var(--surface-2);
-  border-radius: 16rpx;
+  border-radius: 20rpx;
   padding: 24rpx;
   margin-bottom: 28rpx;
 }
 .room-summary-name {
-  font-size: 32rpx;
+  font-size: 34rpx;
   font-weight: 600;
 }
 .room-summary-meta {
@@ -30,8 +32,8 @@
 }
 .picker-value {
   background: var(--surface-2);
-  border: 1rpx solid var(--border);
-  border-radius: 16rpx;
+  border: none;
+  border-radius: 20rpx;
   height: 88rpx;
   line-height: 88rpx;
   padding: 0 24rpx;

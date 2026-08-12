@@ -6,6 +6,14 @@ function clamp(v, min, max, fallback) {
   return Math.min(max, Math.max(min, Math.round(n)))
 }
 
+// 倍率校验：保留最多两位小数，限制在 [MIN_RATE, MAX_RATE]
+function clampRate(v) {
+  const n = Number(v)
+  if (!isFinite(n) || n <= 0) return config.DEFAULT_RATE
+  const r = Math.round(n * 100) / 100
+  return Math.min(config.MAX_RATE, Math.max(config.MIN_RATE, r))
+}
+
 function genRoomCode() {
   const chars = config.ROOM_CODE_CHARSET
   let code = ''
@@ -36,6 +44,7 @@ function normalizeRoom(raw) {
     hostOpenId: raw.hostOpenId || '',
     status: raw.status || 'playing',
     maxPlayers: clamp(raw.maxPlayers, 2, 8, 4),
+    rate: clampRate(raw.rate),
     players: Array.isArray(raw.players) ? raw.players : [],
     scores: raw.scores && typeof raw.scores === 'object' ? raw.scores : {},
     history: Array.isArray(raw.history) ? raw.history : [],
@@ -60,93 +69,93 @@ function sortedPlayers(room) {
     .sort((a, b) => b.score - a.score)
 }
 
-const RANK_MEDALS = ['🥇', '🥈', '🥉']
-
 function buildSettlementText(room) {
-  const lines = [`「${room.name}」结算`]
+  const lines = [`「${room.name}」本局记分结果`]
   sortedPlayers(room).forEach((p, i) => {
-    const medal = RANK_MEDALS[i] || `${i + 1}.`
+    const rank = `第${i + 1}名`
     const sign = p.score > 0 ? '+' : ''
-    lines.push(`${medal} ${p.nickname || '玩家'} ${sign}${p.score}`)
+    lines.push(`${rank} ${p.nickname || '玩家'} ${sign}${p.score} 积分`)
   })
-  lines.push('请通过微信收付款/转账自行结算')
   return lines.join('\n')
 }
 
-// ---------- 优化转账清单 ----------
-// 净额 = 分数 × 汇率，按“分”取整计算，避免浮点误差
-// 贪心配对：最大债务人 ↔ 最大债权人，逐笔冲销，最小化转账笔数
-
-function parseRate(v) {
-  const n = Number(v)
-  if (!isFinite(n) || n <= 0) return 1
-  return n
-}
-
-function formatYuan(cents) {
-  const n = Math.round(cents || 0) / 100
-  return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/\.?0+$/, '')
-}
-
-// playerList: [{ id, nickname, score }]（settle 页的 playerList 已带 score）
-// rate: 1 分兑换多少元（默认 1）
-// 返回 { transfers: [{ key, fromId, fromName, toId, toName, amountText }], totalDebt, totalCredit }
-// totalDebt / totalCredit 单位为“分”，用于差额提示
-function buildTransfers(playerList, rate) {
-  const r = parseRate(rate)
-  const entries = (Array.isArray(playerList) ? playerList : [])
-    .filter(p => p)
-    .map(p => ({
-      id: p.id,
-      name: p.nickname || '玩家',
-      cents: Math.round((p.score || 0) * r * 100)
-    }))
-    .filter(b => b.cents !== 0)
-  if (entries.length < 2) {
-    return { transfers: [], totalDebt: 0, totalCredit: 0 }
-  }
-  const debtors = entries.filter(b => b.cents < 0).sort((a, b) => a.cents - b.cents) // 欠款最多在前
-  const creditors = entries.filter(b => b.cents > 0).sort((a, b) => b.cents - a.cents) // 应收最多在前
-  const totalDebt = debtors.reduce((s, b) => s - b.cents, 0)
-  const totalCredit = creditors.reduce((s, b) => s + b.cents, 0)
-  const transfers = []
-  let i = 0
-  let j = 0
-  while (i < debtors.length && j < creditors.length) {
-    const d = debtors[i]
-    const c = creditors[j]
-    const pay = Math.min(-d.cents, c.cents)
-    transfers.push({
-      key: transfers.length,
-      fromId: d.id,
-      fromName: d.name,
-      toId: c.id,
-      toName: c.name,
-      amountText: `${formatYuan(pay)}元`
+// ---------- 圆桌座位 ----------
+function seatPositions(count) {
+  // Inner ring: player cards never share the outer directional ring.
+  const R = count <= 4 ? 25 : 29
+  const arr = []
+  for (let i = 0; i < count; i++) {
+    const rad = ((-90 + i * (360 / count)) * Math.PI) / 180
+    arr.push({
+      x: Math.round((50 + R * Math.cos(rad)) * 100) / 100,
+      y: Math.round((50 + R * Math.sin(rad)) * 100) / 100
     })
-    d.cents += pay
-    c.cents -= pay
-    if (d.cents === 0) i++
-    if (c.cents === 0) j++
   }
-  return { transfers, totalDebt, totalCredit }
+  return arr
 }
 
-function buildTransferText(roomName, result, rate) {
-  const transfers = result && result.transfers ? result.transfers : []
-  const totalDebt = result ? result.totalDebt : 0
-  const totalCredit = result ? result.totalCredit : 0
-  const r = parseRate(rate)
-  const lines = [`「${roomName}」转账清单（1分=${formatYuan(Math.round(r * 100))}元）`]
-  if (!transfers.length) {
-    lines.push('无需转账，已全部结清')
-    return lines.join('\n')
+function seatDirections(count) {
+  const labels = {
+    2: ['北', '南'],
+    3: ['北', '东南', '西南'],
+    4: ['北', '东', '南', '西'],
+    5: ['北', '东', '东南', '西南', '西'],
+    6: ['北', '东北', '东南', '南', '西南', '西'],
+    7: ['北', '东北', '东', '东南', '西南', '西', '西北'],
+    8: ['北', '东北', '东', '东南', '南', '西南', '西', '西北']
   }
-  transfers.forEach(t => lines.push(`${t.fromName} 转给 ${t.toName} ${t.amountText}`))
-  const diff = Math.abs(totalDebt - totalCredit)
-  if (diff >= 1) lines.push(`注：总分未归零，差额 ${formatYuan(diff)} 元请自行处理`)
-  lines.push('请通过微信「收付款 / 转账」完成以上款项')
-  return lines.join('\n')
+  return labels[count] || []
+}
+
+function directionPositions(count) {
+  const R = 44
+  const arr = []
+  for (let i = 0; i < count; i++) {
+    const rad = ((-90 + i * (360 / count)) * Math.PI) / 180
+    arr.push({
+      x: Math.round((50 + R * Math.cos(rad)) * 100) / 100,
+      y: Math.round((50 + R * Math.sin(rad)) * 100) / 100
+    })
+  }
+  return arr
+}
+
+function lowestFreeSeat(players, maxPlayers) {
+  const used = new Set()
+  players.forEach(p => {
+    if (Number.isInteger(p.seat) && p.seat >= 0 && p.seat < maxPlayers) used.add(p.seat)
+  })
+  for (let i = 0; i < maxPlayers; i++) {
+    if (!used.has(i)) return i
+  }
+  return 0
+}
+
+function assignSeats(players, maxPlayers, hostId) {
+  const used = new Set()
+  players.forEach(p => {
+    if (Number.isInteger(p.seat) && p.seat >= 0 && p.seat < maxPlayers && !used.has(p.seat)) {
+      used.add(p.seat)
+    } else {
+      p.seat = -1
+    }
+  })
+  const host = players.find(p => p.id === hostId)
+  if (host && host.seat === -1 && !used.has(0)) {
+    host.seat = 0
+    used.add(0)
+  }
+  players.forEach(p => {
+    if (p.seat === -1) {
+      for (let i = 0; i < maxPlayers; i++) {
+        if (!used.has(i)) {
+          p.seat = i
+          used.add(i)
+          break
+        }
+      }
+    }
+  })
 }
 
 const AVATAR_COLORS = ['#2ecc8f', '#f2c14e', '#5b8def', '#e07a5f', '#9b5de5', '#f15bb5', '#00b4d8', '#6a994e']
@@ -177,6 +186,7 @@ function timeAgo(ts) {
 
 module.exports = {
   clamp,
+  clampRate,
   genRoomCode,
   decodeRoomCode,
   normalizeRoom,
@@ -184,9 +194,12 @@ module.exports = {
   scoreOf,
   sortedPlayers,
   buildSettlementText,
-  buildTransfers,
-  buildTransferText,
   avatarColor,
   avatarText,
-  timeAgo
+  timeAgo,
+  seatPositions,
+  seatDirections,
+  directionPositions,
+  lowestFreeSeat,
+  assignSeats
 }

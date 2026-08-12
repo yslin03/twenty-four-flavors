@@ -6,7 +6,8 @@ const KEYS = {
   recent: 'poker:recent',
   profile: 'poker:profile',
   deviceId: 'poker:deviceId',
-  openId: 'poker:openId'
+  openId: 'poker:openId',
+  settlements: 'poker:settlements'
 }
 
 function readStorage(key, fallback) {
@@ -34,6 +35,53 @@ function getDeviceId() {
 
 function getMyOpenId() { return readStorage(KEYS.openId, '') }
 function setMyOpenId(id) { if (id) writeStorage(KEYS.openId, id) }
+
+// ---------- 历史战绩（本机累计，按本机结束过的局数统计） ----------
+function saveLocalSettlement(room) {
+  if (!room || !room.code) return
+  const list = readStorage(KEYS.settlements, [])
+  list.push({
+    roomId: room.code,
+    roomName: room.name || '',
+    players: (room.players || []).map(p => ({
+      id: p.id,
+      openid: p.openid || p.id,
+      nickname: p.nickname || '玩家',
+      avatar: p.avatar || p.avatarFileID || ''
+    })),
+    finalScores: room.scores || {},
+    finishedAt: Date.now()
+  })
+  writeStorage(KEYS.settlements, list.slice(-200))
+}
+
+function getPlayerStats() {
+  const list = readStorage(KEYS.settlements, [])
+  const map = {}
+  list.forEach(s => {
+    const players = s.players || []
+    const scores = s.finalScores || {}
+    const ranked = players.slice().sort((a, b) => (scores[b.id] || 0) - (scores[a.id] || 0))
+    const winId = ranked.length > 1 ? ranked[0].id : ''
+    players.forEach(p => {
+      const st = map[p.id] || (map[p.id] = { id: p.id, nickname: p.nickname, games: 0, wins: 0, losses: 0, total: 0, rate: 0 })
+      st.nickname = p.nickname
+      st.games += 1
+      if (winId) {
+        if (p.id === winId) st.wins += 1
+        else st.losses += 1
+      }
+      st.total += scores[p.id] || 0
+    })
+  })
+  return Object.keys(map).map(k => {
+    const s = map[k]
+    s.rate = s.games ? Math.round((s.wins / s.games) * 100) : 0
+    return s
+  }).sort((a, b) => b.total - a.total)
+}
+
+function getSettlements() { return readStorage(KEYS.settlements, []) }
 
 function getMyId() {
   return config.USE_CLOUD ? getMyOpenId() : getDeviceId()
@@ -93,7 +141,7 @@ const local = {
     return code
   },
 
-  async createRoom({ name, maxPlayers, profile, players } = {}) {
+  async createRoom({ name, maxPlayers, profile, players, rate } = {}) {
     const deviceId = getDeviceId()
     const code = this.uniqueCode()
     const nickname = (profile && profile.nickname) || '房主'
@@ -106,12 +154,14 @@ const local = {
           openid: p.openid || p.id,
           nickname: p.nickname || '玩家',
           avatar: roomUtil.playerAvatar(p),
-          joinedAt: p.joinedAt || Date.now()
+          joinedAt: p.joinedAt || Date.now(),
+          seat: Number.isInteger(p.seat) ? p.seat : -1
         }))
-      : [{ id: deviceId, openid: deviceId, nickname, avatar, joinedAt: Date.now() }]
+      : [{ id: deviceId, openid: deviceId, nickname, avatar, joinedAt: Date.now(), seat: -1 }]
     if (!playerList.some(p => p.id === deviceId)) {
-      playerList.unshift({ id: deviceId, openid: deviceId, nickname, avatar, joinedAt: Date.now() })
+      playerList.unshift({ id: deviceId, openid: deviceId, nickname, avatar, joinedAt: Date.now(), seat: -1 })
     }
+    roomUtil.assignSeats(playerList, max, deviceId)
     const scores = {}
     playerList.forEach(p => { scores[p.id] = 0 })
     const now = Date.now()
@@ -121,6 +171,7 @@ const local = {
       hostOpenId: deviceId,
       status: 'playing',
       maxPlayers: max,
+      rate: rate || config.DEFAULT_RATE,
       players: playerList,
       scores,
       history: [],
@@ -164,7 +215,8 @@ const local = {
       existing.avatar = avatar
     } else {
       if (room.players.length >= room.maxPlayers) throw new Error('房间已满员')
-      room.players.push({ id: deviceId, openid: deviceId, nickname, avatar, joinedAt: Date.now() })
+      const seat = roomUtil.lowestFreeSeat(room.players, room.maxPlayers)
+      room.players.push({ id: deviceId, openid: deviceId, nickname, avatar, joinedAt: Date.now(), seat })
       room.scores[deviceId] = 0
     }
     room.updatedAt = Date.now()
@@ -188,7 +240,8 @@ const local = {
     if (!room) throw new Error('房间不存在')
     if (room.status !== 'playing') throw new Error('房间已结束')
     const d = Math.round(Number(delta) || 0)
-    if (d === 0 || Math.abs(d) > config.CUSTOM_SCORE_LIMIT) throw new Error('分值无效')
+    if (d <= 0) throw new Error('仅支持加分')
+    if (d > config.CUSTOM_SCORE_LIMIT) throw new Error('分值过大')
     if (!room.players.some(p => p.id === playerId)) throw new Error('玩家不存在')
     room.scores[playerId] = (room.scores[playerId] || 0) + d
     room.history.push({ playerId, delta: d, byOpenId: getDeviceId(), ts: Date.now() })
@@ -219,6 +272,33 @@ const local = {
     return roomUtil.normalizeRoom(room)
   },
 
+  async setSeat({ roomCode, seat } = {}) {
+    const code = String(roomCode || '').trim().toUpperCase()
+    const map = this.getRoomsMap()
+    const room = map[code]
+    if (!room) throw new Error('房间不存在')
+    if (room.status !== 'playing') throw new Error('房间已结束')
+    const s = Math.floor(Number(seat))
+    if (!Number.isInteger(s) || s < 0 || s >= room.maxPlayers) throw new Error('座位无效')
+    const deviceId = getDeviceId()
+    const me = room.players.find(p => p.id === deviceId)
+    if (!me) throw new Error('非本房间成员')
+    const target = room.players.find(p => p.id !== deviceId && p.seat === s)
+    if (target) {
+      const mySeat = me.seat
+      me.seat = s
+      target.seat = mySeat
+    } else {
+      me.seat = s
+    }
+    room.updatedAt = Date.now()
+    map[code] = room
+    this.saveRoomsMap(map)
+    saveRecentRoom(room)
+    this.notify(code, room)
+    return roomUtil.normalizeRoom(room)
+  },
+
   async endRoom({ roomCode } = {}) {
     const code = String(roomCode || '').trim().toUpperCase()
     const map = this.getRoomsMap()
@@ -227,6 +307,21 @@ const local = {
     if (room.status === 'ended') return roomUtil.normalizeRoom(room)
     room.status = 'ended'
     room.endedAt = Date.now()
+    room.updatedAt = Date.now()
+    map[code] = room
+    this.saveRoomsMap(map)
+    saveRecentRoom(room)
+    saveLocalSettlement(roomUtil.normalizeRoom(room))
+    this.notify(code, room)
+    return roomUtil.normalizeRoom(room)
+  },
+
+  async setRoomRate({ roomCode, rate } = {}) {
+    const code = String(roomCode || '').trim().toUpperCase()
+    const map = this.getRoomsMap()
+    const room = map[code]
+    if (!room) throw new Error('房间不存在')
+    room.rate = roomUtil.clampRate(rate)
     room.updatedAt = Date.now()
     map[code] = room
     this.saveRoomsMap(map)
@@ -327,6 +422,21 @@ const cloud = {
 
   async endRoom(args = {}) {
     const r = await callFn('endRoom', { roomCode: args.roomCode })
+    const room = roomUtil.normalizeRoom(r.room)
+    saveLocalSettlement(room)
+    return room
+  },
+
+  async setSeat(args = {}) {
+    const r = await callFn('setSeat', { roomCode: args.roomCode, seat: args.seat })
+    return roomUtil.normalizeRoom(r.room)
+  },
+
+  async setRoomRate(args = {}) {
+    const r = await callFn('setRoomRate', {
+      roomCode: args.roomCode,
+      rate: args.rate
+    })
     return roomUtil.normalizeRoom(r.room)
   },
 
@@ -395,11 +505,15 @@ module.exports = {
   updateScore: (args) => pick().updateScore(args),
   undoScore: (args) => pick().undoScore(args),
   endRoom: (args) => pick().endRoom(args),
+  setSeat: (args) => pick().setSeat(args),
+  setRoomRate: (args) => pick().setRoomRate(args),
   getRoomQrcode: (args) => pick().getRoomQrcode(args),
   watchRoom: (code, cb) => pick().watch(code, cb),
   ensureAvatar,
   getRecentRooms,
   saveRecentRoom,
+  getPlayerStats,
+  getSettlements,
   getProfile,
   saveProfile,
   getDeviceId,

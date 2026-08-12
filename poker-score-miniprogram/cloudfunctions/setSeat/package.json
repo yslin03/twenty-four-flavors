@@ -1,7 +1,7 @@
 {
-  "name": "endRoom",
+  "name": "setSeat",
   "version": "1.0.0",
-  "description": "结束房间并保存记分快照",
+  "description": "选择/互换打牌房间座位",
   "main": "index.js",
   "dependencies": {
     "wx-server-sdk": "~2.6.3"

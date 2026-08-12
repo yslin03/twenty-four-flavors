@@ -1,5 +1,13 @@
 const store = require('../../utils/store')
 const roomUtil = require('../../utils/room')
+const config = require('../../config')
+const tts = require('../../utils/tts')
+
+function formatScoreTime(value) {
+  const date = new Date(Number(value) || Date.now())
+  const pad = n => String(n).padStart(2, '0')
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+}
 
 Page({
   data: {
@@ -8,9 +16,17 @@ Page({
     playerList: [],
     historyPreview: [],
     myId: '',
+    isHost: false,
     panel: { show: false, player: null },
     invite: { show: false, fileID: '', qrError: '', qrLoading: false },
-    redirecting: false
+    nicknameModal: { show: false },
+    nicknameInput: '',
+    voiceOn: true,
+    redirecting: false,
+    rateOptions: config.RATE_OPTIONS,
+    customRateMode: false,
+    customRate: '',
+    customRateActive: false
   },
 
   offWatch: null,
@@ -22,12 +38,17 @@ Page({
       setTimeout(() => wx.navigateBack(), 1000)
       return
     }
-    this.setData({ roomCode, myId: store.getMyId() })
+    this.setData({
+      roomCode,
+      myId: store.getMyId(),
+      voiceOn: tts.isEnabled()
+    })
     await this.loadRoom(false)
     this.startWatch()
   },
 
   onShow() {
+    this.setData({ voiceOn: tts.isEnabled() })
     if (this.data.roomCode) this.loadRoom(true)
   },
 
@@ -75,13 +96,26 @@ Page({
       avatarColor: roomUtil.avatarColor(p.nickname),
       avatarText: roomUtil.avatarText(p.nickname)
     }))
+    const rateInOptions = config.RATE_OPTIONS.includes(room.rate)
+    const customRateActive = !rateInOptions
+    if (this.data.customRateMode && !customRateActive) {
+      this.setData({ customRateMode: false })
+    }
+    this.setData({
+      customRateActive,
+      customRate: customRateActive ? String(room.rate) : this.data.customRate
+    })
     const historyPreview = room.history.slice(-5).reverse().map(h => {
       const target = room.players.find(x => x.id === h.playerId)
       const by = room.players.find(x => x.id === h.byOpenId)
       const sign = h.delta > 0 ? '+' : ''
-      return { ts: h.ts, text: `${by ? by.nickname : '某人'} 给 ${target ? target.nickname : '玩家'} ${sign}${h.delta} 分` }
+      return {
+        ts: h.ts,
+        time: formatScoreTime(h.ts),
+        text: `${by ? by.nickname : '某人'} 给 ${target ? target.nickname : '玩家'} ${sign}${h.delta} 积分`
+      }
     })
-    this.setData({ room, playerList, historyPreview })
+    this.setData({ room, playerList, historyPreview, isHost: myId === room.hostOpenId })
     store.saveRecentRoom(room)
   },
 
@@ -96,7 +130,39 @@ Page({
     const index = e.currentTarget.dataset.index
     const player = this.data.playerList[index]
     if (!player) return
+    if (player.id === this.data.myId) {
+      this.setData({ nicknameModal: { show: true }, nicknameInput: player.nickname || '' })
+      return
+    }
     this.setData({ panel: { show: true, player } })
+  },
+
+  onNicknameInput(e) {
+    this.setData({ nicknameInput: e.detail.value })
+  },
+
+  onNicknameClose() {
+    this.setData({ nicknameModal: { show: false } })
+  },
+
+  async onNicknameSave() {
+    const nickname = (this.data.nicknameInput || '').trim()
+    if (!nickname) {
+      wx.showToast({ title: '请输入昵称', icon: 'none' })
+      return
+    }
+    wx.showLoading({ title: '保存中', mask: true })
+    try {
+      const profile = store.getProfile() || {}
+      await store.joinRoom({ roomCode: this.data.roomCode, profile: { nickname, avatar: profile.avatar || '' } })
+      store.saveProfile({ ...profile, nickname })
+      this.setData({ nicknameModal: { show: false } })
+      wx.hideLoading()
+      this.loadRoom(true)
+    } catch (err) {
+      wx.hideLoading()
+      wx.showToast({ title: (err && err.message) || '保存失败', icon: 'none' })
+    }
   },
 
   onPanelClose() {
@@ -105,14 +171,82 @@ Page({
 
   async onScoreConfirm(e) {
     const { playerId, delta } = e.detail
+    const rate = (this.data.room && this.data.room.rate) || 1
+    const scoredDelta = Math.round(delta * rate)
     this.onPanelClose()
-    wx.showLoading({ title: '计分中', mask: true })
+    const currentRoom = this.data.room
+    const target = currentRoom && currentRoom.players.find(p => p.id === playerId)
+
+    // Show the score instantly; the cloud transaction and room watcher reconcile it.
+    if (target && scoredDelta > 0) {
+      const optimisticRoom = {
+        ...currentRoom,
+        scores: {
+          ...currentRoom.scores,
+          [playerId]: (currentRoom.scores[playerId] || 0) + scoredDelta
+        }
+      }
+      this.applyRoom(optimisticRoom)
+    }
     try {
-      await store.updateScore({ roomCode: this.data.roomCode, playerId, delta })
+      // The result comes from the transaction; `watch()` also broadcasts it to every player.
+      const room = await store.updateScore({ roomCode: this.data.roomCode, playerId, delta: scoredDelta })
+      if (room) this.applyRoom(room)
+      if (target && scoredDelta > 0) {
+        tts.speak('给' + target.nickname + '加' + scoredDelta + '分')
+      }
+    } catch (err) {
+      // Restore the authoritative state if the transaction was rejected.
+      this.loadRoom(true)
+      wx.showToast({ title: (err && err.message) || '计分失败', icon: 'none' })
+    }
+  },
+
+  async onRateTap(e) {
+    const rate = Number(e.currentTarget.dataset.rate)
+    if (!rate || rate === this.data.room.rate) return
+    this.setData({ customRateMode: false })
+    wx.showLoading({ title: '切换倍率', mask: true })
+    try {
+      await store.setRoomRate({ roomCode: this.data.roomCode, rate })
       wx.hideLoading()
     } catch (err) {
       wx.hideLoading()
-      wx.showToast({ title: (err && err.message) || '计分失败', icon: 'none' })
+      wx.showToast({ title: (err && err.message) || '切换失败', icon: 'none' })
+    }
+  },
+
+  onRateCustom() {
+    const cur = this.data.room && this.data.room.rate
+    this.setData({ customRateMode: true, customRate: cur != null ? String(cur) : '' })
+  },
+
+  onRateInput(e) {
+    this.setData({ customRate: e.detail.value })
+  },
+
+  async onRateCustomConfirm() {
+    const raw = this.data.customRate
+    const rate = roomUtil.clampRate(raw)
+    const target = Number(raw)
+    if (!isFinite(target) || target <= 0) {
+      wx.showToast({ title: '请输入有效的倍率', icon: 'none' })
+      return
+    }
+    if (target !== rate) {
+      wx.showToast({
+        title: `倍率已自动限制在 ${config.MIN_RATE} ~ ${config.MAX_RATE} 之间`,
+        icon: 'none'
+      })
+    }
+    wx.showLoading({ title: '切换倍率', mask: true })
+    try {
+      await store.setRoomRate({ roomCode: this.data.roomCode, rate })
+      this.setData({ customRateMode: false })
+      wx.hideLoading()
+    } catch (err) {
+      wx.hideLoading()
+      wx.showToast({ title: (err && err.message) || '切换失败', icon: 'none' })
     }
   },
 
@@ -141,11 +275,11 @@ Page({
   onEnd() {
     wx.showModal({
       title: '结束本局',
-      content: '结束后将进入结算页，不可继续计分，确认结束？',
+      content: '结束后将进入记分结果页，不可继续记分，确认结束？',
       confirmColor: '#e04f4f',
       success: async (res) => {
         if (!res.confirm) return
-        wx.showLoading({ title: '结算中', mask: true })
+        wx.showLoading({ title: '结束中', mask: true })
         try {
           await store.endRoom({ roomCode: this.data.roomCode })
           wx.hideLoading()
@@ -178,12 +312,26 @@ Page({
         })
       }
     } else {
-      this.setData({ invite: { show: true, fileID: '', qrError: '', qrLoading: false } })
+      this.setData({
+        invite: {
+          show: true,
+          fileID: '',
+          qrError: '本地模式无法生成「微信扫一扫」直达的小程序码：请将 config.js 的 USE_CLOUD 设为 true 并部署云函数后，这里会自动生成扫码直达的小程序码。当前可用房间码或转发邀请。',
+          qrLoading: false
+        }
+      })
     }
   },
 
   onInviteClose() {
     this.setData({ invite: { show: false } })
+  },
+
+  onVoiceToggle() {
+    const next = !this.data.voiceOn
+    tts.setEnabled(next)
+    this.setData({ voiceOn: next })
+    wx.showToast({ title: next ? '语音已开启' : '语音已关闭', icon: 'none' })
   },
 
   onCopyCode() {
@@ -219,10 +367,8 @@ Page({
   onShareAppMessage() {
     const room = this.data.room || {}
     return {
-      title: `加入「${room.name || '打牌'}」牌局，一起记账！`,
+      title: `加入「${room.name || '牌局'}」一起娱乐记分！`,
       path: `/pages/join/join?room=${this.data.roomCode}`
     }
   }
 })
-
-
