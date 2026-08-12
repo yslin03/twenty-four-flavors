@@ -444,32 +444,34 @@ const cloud = {
   async getRoomQrcode(args = {}) {
     ensureCloud()
     const code = String(args.roomCode || '').trim().toUpperCase()
-    if (code) {
-      const cache = readStorage(KEYS.qrCache, {})
-      const c = cache[code]
-      if (c) {
-        const fileID = typeof c === 'string' ? c : c.fileID
-        const urlLink = typeof c === 'string' ? '' : (c.urlLink || '')
-        return { fileID, urlLink, cached: true }
+    const needLink = !!args.needLink
+    const cache = readStorage(KEYS.qrCache, {})
+    const c = cache[code]
+    if (c) {
+      const fileID = typeof c === 'string' ? c : c.fileID
+      const urlLink = typeof c === 'string' ? '' : (c.urlLink || '')
+      if (needLink && !urlLink) {
+        try {
+          const r = await callFn('getRoomQrcode', { roomCode: code, envVersion: config.QR_ENV_VERSION, needLink: true })
+          if (r && r.urlLink) {
+            cache[code] = { fileID, urlLink: r.urlLink }
+            writeStorage(KEYS.qrCache, cache)
+            return { fileID, urlLink: r.urlLink }
+          }
+        } catch (e) { /* ignore */ }
       }
+      return { fileID, urlLink, cached: true }
     }
     try {
-      const res = await wx.cloud.callFunction({
-        name: 'getRoomQrcode',
-        data: { roomCode: args.roomCode, envVersion: config.QR_ENV_VERSION }
-      })
-      const r = res && res.result
-      if (r && r.ok && r.fileID) {
-        if (code) {
-          const cache = readStorage(KEYS.qrCache, {})
-          cache[code] = { fileID: r.fileID, urlLink: r.urlLink || '' }
-          writeStorage(KEYS.qrCache, cache)
-        }
+      const r = await callFn('getRoomQrcode', { roomCode: code, envVersion: config.QR_ENV_VERSION, needLink })
+      if (r && r.fileID) {
+        cache[code] = { fileID: r.fileID, urlLink: r.urlLink || '' }
+        writeStorage(KEYS.qrCache, cache)
         return { fileID: r.fileID, urlLink: r.urlLink || '' }
       }
-      return { fileID: '', error: (r && r.error) || '生成小程序码失败' }
-    } catch (e) {
       return { fileID: '', error: '生成小程序码失败' }
+    } catch (e) {
+      return { fileID: '', error: (e && e.message) || '生成小程序码失败' }
     }
   },
 

@@ -119,6 +119,9 @@ Page({
             players: seedPlayers
           })
           wx.hideLoading()
+          if (store.isCloud()) {
+            store.getRoomQrcode({ roomCode: created.room.code }).catch(() => { /* ignore */ })
+          }
           wx.redirectTo({ url: `/pages/room/room?room=${created.room.code}&invite=1` })
         } catch (err) {
           wx.hideLoading()

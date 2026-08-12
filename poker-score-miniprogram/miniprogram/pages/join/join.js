@@ -97,6 +97,10 @@ Page({
         ? await store.createRoom({ name: this.data.roomName, maxPlayers: this.data.maxPlayers, profile })
         : await store.joinRoom({ roomCode: this.data.roomCode, profile })
       wx.hideLoading()
+      // 提前生成二维码，进入房间自动弹邀请时基本已缓存
+      if (this.data.isCreate && store.isCloud()) {
+        store.getRoomQrcode({ roomCode: room.code }).catch(() => { /* ignore */ })
+      }
       wx.redirectTo({ url: `/pages/room/room?room=${room.code}&invite=1` })
     } catch (err) {
       wx.hideLoading()

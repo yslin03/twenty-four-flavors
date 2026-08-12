@@ -449,7 +449,7 @@ Page({
     const fallback = '「' + roomName + '」牌局记分，房间码：' + code + '，打开小程序即可加入'
     if (store.isCloud()) {
       wx.showLoading({ title: '生成链接', mask: true })
-      store.getRoomQrcode({ roomCode: code })
+      store.getRoomQrcode({ roomCode: code, needLink: true })
         .then(res => {
           wx.hideLoading()
           const link = res && res.urlLink
