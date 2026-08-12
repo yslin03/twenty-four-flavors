@@ -117,6 +117,24 @@ function assignSeats(players, maxPlayers, hostId) {
   })
 }
 
+// ---------- 扫码解析 ----------
+function parseScanResult(text) {
+  const s = String(text || '').trim()
+  if (!s) return ''
+  const direct = s.match(/(?:[?&]|^)r=([A-Za-z0-9]{4,12})/)
+  if (direct) return direct[1].toUpperCase()
+  const scene = s.match(/scene=([^&\s]+)/i)
+  if (scene) {
+    try {
+      const v = decodeURIComponent(scene[1])
+      const m = v.match(/r=([A-Za-z0-9]{4,12})/)
+      if (m) return m[1].toUpperCase()
+    } catch (e) { /* ignore */ }
+  }
+  const code = s.replace(/[^A-Za-z0-9]/g, '').toUpperCase()
+  return /^[A-Z0-9]{4,12}$/.test(code) ? code : ''
+}
+
 const AVATAR_COLORS = ['#2ecc8f', '#f2c14e', '#5b8def', '#e07a5f', '#9b5de5', '#f15bb5', '#00b4d8', '#6a994e']
 
 function avatarColor(name) {
@@ -156,6 +174,7 @@ module.exports = {
   avatarColor,
   avatarText,
   timeAgo,
+  parseScanResult,
   lowestFreeSeat,
   assignSeats
 }

@@ -4,14 +4,33 @@ const roomUtil = require('../../utils/room')
 Page({
   data: {
     roomCodeInput: '',
-    recent: [],
+    career: { games: 0, wins: 0, losses: 0, rate: 0, total: 0, rankText: '' },
     showDemo: !store.isCloud()
   },
 
   onShow() {
-    const list = store.getRecentRooms()
-    this.setData({
-      recent: list.map(r => ({ ...r, timeText: roomUtil.timeAgo(r.updatedAt) }))
+    const myId = store.getMyId()
+    const stats = store.getPlayerStats()
+    let career = { games: 0, wins: 0, losses: 0, rate: 0, total: 0, rankText: '' }
+    const idx = stats.findIndex(s => s.id === myId)
+    if (idx >= 0) {
+      const s = stats[idx]
+      career = { games: s.games, wins: s.wins, losses: s.losses || 0, rate: s.rate, total: s.total, rankText: '第' + (idx + 1) + '名' }
+    }
+    this.setData({ career })
+  },
+
+  onScan() {
+    wx.scanCode({
+      onlyFromCamera: false,
+      success: (res) => {
+        const code = roomUtil.parseScanResult(res && res.result)
+        if (!code) {
+          wx.showToast({ title: '未识别到房间码', icon: 'none' })
+          return
+        }
+        wx.navigateTo({ url: '/pages/join/join?mode=join&room=' + code })
+      }
     })
   },
 
@@ -45,9 +64,4 @@ Page({
       })
   },
 
-  onRecentTap(e) {
-    const code = e.currentTarget.dataset.code
-    if (!code) return
-    wx.navigateTo({ url: `/pages/room/room?room=${code}` })
-  }
 })

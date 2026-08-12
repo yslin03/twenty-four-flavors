@@ -9,21 +9,38 @@
   <view class="card actions">
     <button class="btn btn-primary btn-block" bindtap="onCreate">创建房间</button>
     <view class="join-row">
-      <input class="input join-input" placeholder="输入 4 位房间码" value="{{roomCodeInput}}" bindinput="onCodeInput" maxlength="4"></input>
+      <input class="input join-input" placeholder="输入房间码" value="{{roomCodeInput}}" bindinput="onCodeInput" maxlength="4"></input>
       <button class="btn btn-ghost join-btn" bindtap="onJoin">加入</button>
     </view>
+    <button class="btn btn-ghost btn-block scan-btn" bindtap="onScan">扫码进房</button>
     <button wx:if="{{showDemo}}" class="btn btn-ghost btn-block demo-btn" bindtap="onDemo">快速演示（建房 + 模拟玩家）</button>
   </view>
 
-  <view class="section" wx:if="{{recent.length}}">
-    <view class="section-title">最近房间</view>
-    <view class="recent-item card" wx:for="{{recent}}" wx:key="code" data-code="{{item.code}}" bindtap="onRecentTap">
-      <view class="recent-main">
-        <view class="recent-name">{{item.name}}</view>
-        <view class="recent-meta">{{item.code}} · {{item.timeText}}</view>
+  <view class="card career">
+    <view class="section-title">个人生涯</view>
+    <view class="career-row">
+      <view class="career-item">
+        <view class="career-num">{{career.games}}</view>
+        <view class="career-label">局数</view>
       </view>
-      <view class="recent-status {{item.status === 'ended' ? 'is-ended' : ''}}">{{item.status === 'ended' ? '已结束' : '进行中'}}</view>
+      <view class="career-item">
+        <view class="career-num pos">{{career.wins}}</view>
+        <view class="career-label">胜</view>
+      </view>
+      <view class="career-item">
+        <view class="career-num neg">{{career.losses}}</view>
+        <view class="career-label">负</view>
+      </view>
+      <view class="career-item">
+        <view class="career-num">{{career.rate}}%</view>
+        <view class="career-label">胜率</view>
+      </view>
+      <view class="career-item">
+        <view class="career-num {{career.total >= 0 ? 'pos' : 'neg'}}">{{career.total >= 0 ? '+' : ''}}{{career.total}}</view>
+        <view class="career-label">总积分</view>
+      </view>
     </view>
+    <view class="career-rank" wx:if="{{career.rankText}}">好友排名：{{career.rankText}}</view>
   </view>
 </view>
 </view>

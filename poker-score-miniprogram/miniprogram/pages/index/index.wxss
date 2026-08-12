@@ -40,26 +40,32 @@
 .demo-btn {
   margin-top: 24rpx;
 }
-.recent-item {
+.scan-btn {
+  margin-top: 24rpx;
+}
+.career {
+  margin-top: 24rpx;
+}
+.career-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20rpx;
-  padding: 30rpx;
 }
-.recent-name {
-  font-size: 34rpx;
-  font-weight: 600;
+.career-item {
+  flex: 1;
+  text-align: center;
 }
-.recent-meta {
-  font-size: 26rpx;
-  color: var(--muted);
+.career-num {
+  font-size: 40rpx;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.career-label {
   margin-top: 6rpx;
+  font-size: 24rpx;
+  color: var(--muted);
 }
-.recent-status {
+.career-rank {
+  margin-top: 20rpx;
   font-size: 24rpx;
   color: var(--accent);
-}
-.recent-status.is-ended {
-  color: var(--muted);
+  text-align: center;
 }
