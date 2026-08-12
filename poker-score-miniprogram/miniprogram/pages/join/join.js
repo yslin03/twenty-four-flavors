@@ -19,6 +19,7 @@ Page({
   },
 
   async onLoad(options) {
+    try { wx.showShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] }) } catch (e) { /* ignore */ }
     const mode = options.mode === 'create' ? 'create' : 'join'
     const code = roomUtil.decodeRoomCode(options)
     const profile = store.getProfile() || {}
@@ -102,5 +103,13 @@ Page({
       this.setData({ submitting: false })
       wx.showToast({ title: (err && err.message) || '操作失败', icon: 'none' })
     }
+  },
+
+  onShareAppMessage() {
+    return { title: '牌局记分 · 聚会娱乐记分工具', path: '/pages/index/index' }
+  },
+
+  onShareTimeline() {
+    return { title: '牌局记分 · 聚会娱乐记分工具' }
   }
 })

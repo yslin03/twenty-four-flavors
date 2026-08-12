@@ -18,6 +18,7 @@ Page({
   },
 
   async onLoad(options) {
+    try { wx.showShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] }) } catch (e) { /* ignore */ }
     const code = roomUtil.decodeRoomCode(options)
     if (!code) {
       wx.navigateBack()
@@ -129,5 +130,13 @@ Page({
 
   onHome() {
     wx.reLaunch({ url: '/pages/index/index' })
+  },
+
+  onShareAppMessage() {
+    return { title: '牌局记分 · 聚会娱乐记分结果', path: '/pages/index/index' }
+  },
+
+  onShareTimeline() {
+    return { title: '牌局记分 · 聚会娱乐记分结果' }
   }
 })

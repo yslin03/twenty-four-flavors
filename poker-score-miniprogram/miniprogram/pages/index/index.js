@@ -9,6 +9,7 @@ Page({
   },
 
   onShow() {
+    try { wx.showShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] }) } catch (e) { /* ignore */ }
     const myId = store.getMyId()
     const stats = store.getPlayerStats()
     let career = { games: 0, wins: 0, losses: 0, rate: 0, total: 0, rankText: '' }
@@ -64,4 +65,11 @@ Page({
       })
   },
 
+  onShareAppMessage() {
+    return { title: '牌局记分 · 聚会娱乐记分工具', path: '/pages/index/index' }
+  },
+
+  onShareTimeline() {
+    return { title: '牌局记分 · 聚会娱乐记分工具' }
+  }
 })

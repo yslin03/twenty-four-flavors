@@ -446,7 +446,12 @@ const cloud = {
     const code = String(args.roomCode || '').trim().toUpperCase()
     if (code) {
       const cache = readStorage(KEYS.qrCache, {})
-      if (cache[code]) return { fileID: cache[code], cached: true }
+      const c = cache[code]
+      if (c) {
+        const fileID = typeof c === 'string' ? c : c.fileID
+        const urlLink = typeof c === 'string' ? '' : (c.urlLink || '')
+        return { fileID, urlLink, cached: true }
+      }
     }
     try {
       const res = await wx.cloud.callFunction({
@@ -457,10 +462,10 @@ const cloud = {
       if (r && r.ok && r.fileID) {
         if (code) {
           const cache = readStorage(KEYS.qrCache, {})
-          cache[code] = r.fileID
+          cache[code] = { fileID: r.fileID, urlLink: r.urlLink || '' }
           writeStorage(KEYS.qrCache, cache)
         }
-        return { fileID: r.fileID }
+        return { fileID: r.fileID, urlLink: r.urlLink || '' }
       }
       return { fileID: '', error: (r && r.error) || '生成小程序码失败' }
     } catch (e) {

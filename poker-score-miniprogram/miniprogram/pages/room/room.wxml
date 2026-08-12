@@ -82,6 +82,7 @@
       <view class="qr-tip" wx:elif="{{invite.qrError}}">{{invite.qrError}}</view>
       <view class="qr-loading" wx:else>{{invite.qrLoading ? '生成二维码中…' : ''}}</view>
 
+      <button class="btn btn-ghost btn-block" bindtap="onCopyInviteLink">复制邀请链接</button>
       <button class="btn btn-primary btn-block" open-type="share">转发给好友</button>
       <button class="btn btn-ghost btn-block close-btn" bindtap="onInviteClose">关闭</button>
     </view>

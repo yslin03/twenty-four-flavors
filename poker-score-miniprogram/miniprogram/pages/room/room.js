@@ -43,6 +43,7 @@ Page({
       myId: store.getMyId(),
       voiceOn: tts.isEnabled()
     })
+    try { wx.showShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] }) } catch (e) { /* ignore */ }
     this.autoInvite = options.invite === '1'
     await this.loadRoom(false)
     this.startWatch()
@@ -433,6 +434,35 @@ Page({
   },
 
   noop() {},
+
+  onShareTimeline() {
+    const room = this.data.room || {}
+    return {
+      title: '加入「' + (room.name || '牌局') + '」一起娱乐记分！',
+      query: 'room=' + this.data.roomCode
+    }
+  },
+
+  onCopyInviteLink() {
+    const code = this.data.roomCode
+    const roomName = (this.data.room && this.data.room.name) || '牌局'
+    const fallback = '「' + roomName + '」牌局记分，房间码：' + code + '，打开小程序即可加入'
+    if (store.isCloud()) {
+      wx.showLoading({ title: '生成链接', mask: true })
+      store.getRoomQrcode({ roomCode: code })
+        .then(res => {
+          wx.hideLoading()
+          const link = res && res.urlLink
+          wx.setClipboardData({ data: link ? '「' + roomName + '」牌局记分邀请：' + link : fallback })
+        })
+        .catch(() => {
+          wx.hideLoading()
+          wx.setClipboardData({ data: fallback })
+        })
+      return
+    }
+    wx.setClipboardData({ data: fallback })
+  },
 
   onShareAppMessage() {
     const room = this.data.room || {}
