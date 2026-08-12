@@ -127,3 +127,15 @@ button::after { border: none; }
   margin-bottom: 24rpx;
   text-align: center;
 }
+
+/* 全局按压反馈：按下立即变淡并轻微缩小，提升按钮响应手感与系统流畅性 */
+.button-hover {
+  opacity: 0.75;
+  transform: scale(0.97);
+  transition: opacity 0.08s ease, transform 0.08s ease;
+}
+.press-hover {
+  opacity: 0.75;
+  transform: scale(0.97);
+  transition: opacity 0.08s ease, transform 0.08s ease;
+}

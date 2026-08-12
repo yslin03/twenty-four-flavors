@@ -1,4 +1,4 @@
-<view class="player-card" bindtap="onTap">
+<view class="player-card" hover-class="press-hover" bindtap="onTap">
   <view class="player-avatar-wrap">
     <image wx:if="{{player.avatar && !avatarFailed}}" class="player-avatar" src="{{player.avatar}}" mode="aspectFill" binderror="onAvatarError"></image>
     <view wx:else class="player-avatar player-avatar-fallback" style="background: {{player.avatarColor}}">{{player.avatarText}}</view>

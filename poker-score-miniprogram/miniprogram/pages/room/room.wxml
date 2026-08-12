@@ -11,12 +11,13 @@
     <view class="rate-label">积分倍率</view>
     <view
       class="rate-chip {{room.rate === item ? 'active' : ''}}"
+      hover-class="press-hover"
       wx:for="{{rateOptions}}"
       wx:key="*this"
       data-rate="{{item}}"
       bindtap="onRateTap"
     >×{{item}}</view>
-    <view class="rate-chip {{customRateMode || customRateActive ? 'active' : ''}}" bindtap="onRateCustom">自定义</view>
+    <view class="rate-chip {{customRateMode || customRateActive ? 'active' : ''}}" hover-class="press-hover" bindtap="onRateCustom">自定义</view>
   </view>
 
   <view class="rate-custom-row" wx:if="{{isHost && customRateMode}}">
