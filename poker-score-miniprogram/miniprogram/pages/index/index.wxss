@@ -79,3 +79,10 @@
   color: var(--accent);
   text-align: center;
 }
+.version-footer {
+  margin-top: 48rpx;
+  text-align: center;
+  font-size: 22rpx;
+  color: var(--muted);
+  opacity: 0.7;
+}

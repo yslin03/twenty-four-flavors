@@ -1,10 +1,20 @@
 const store = require('../../utils/store')
 const roomUtil = require('../../utils/room')
+const config = require('../../config')
+
+function appVersion() {
+  try {
+    const info = wx.getAccountInfoSync()
+    if (info && info.miniProgram && info.miniProgram.version) return info.miniProgram.version
+  } catch (e) { /* ignore */ }
+  return config.VERSION
+}
 
 Page({
   data: {
     roomCodeInput: '',
     career: { games: 0, wins: 0, losses: 0, rate: 0, total: 0, rankText: '' },
+    version: appVersion(),
     showDemo: !store.isCloud()
   },
 

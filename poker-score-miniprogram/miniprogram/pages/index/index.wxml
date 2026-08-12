@@ -42,5 +42,7 @@
     </view>
     <view class="career-rank" wx:if="{{career.rankText}}">好友排名：{{career.rankText}}</view>
   </view>
+
+  <view class="version-footer">牌局记分 · v{{version}}</view>
 </view>
 </view>
