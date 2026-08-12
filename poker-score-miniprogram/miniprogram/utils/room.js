@@ -79,47 +79,6 @@ function buildSettlementText(room) {
   return lines.join('\n')
 }
 
-// ---------- 圆桌座位 ----------
-function seatPositions(count) {
-  // Inner ring: player cards never share the outer directional ring.
-  const R = count <= 4 ? 25 : 29
-  const arr = []
-  for (let i = 0; i < count; i++) {
-    const rad = ((-90 + i * (360 / count)) * Math.PI) / 180
-    arr.push({
-      x: Math.round((50 + R * Math.cos(rad)) * 100) / 100,
-      y: Math.round((50 + R * Math.sin(rad)) * 100) / 100
-    })
-  }
-  return arr
-}
-
-function seatDirections(count) {
-  const labels = {
-    2: ['北', '南'],
-    3: ['北', '东南', '西南'],
-    4: ['北', '东', '南', '西'],
-    5: ['北', '东', '东南', '西南', '西'],
-    6: ['北', '东北', '东南', '南', '西南', '西'],
-    7: ['北', '东北', '东', '东南', '西南', '西', '西北'],
-    8: ['北', '东北', '东', '东南', '南', '西南', '西', '西北']
-  }
-  return labels[count] || []
-}
-
-function directionPositions(count) {
-  const R = 44
-  const arr = []
-  for (let i = 0; i < count; i++) {
-    const rad = ((-90 + i * (360 / count)) * Math.PI) / 180
-    arr.push({
-      x: Math.round((50 + R * Math.cos(rad)) * 100) / 100,
-      y: Math.round((50 + R * Math.sin(rad)) * 100) / 100
-    })
-  }
-  return arr
-}
-
 function lowestFreeSeat(players, maxPlayers) {
   const used = new Set()
   players.forEach(p => {
@@ -197,9 +156,6 @@ module.exports = {
   avatarColor,
   avatarText,
   timeAgo,
-  seatPositions,
-  seatDirections,
-  directionPositions,
   lowestFreeSeat,
   assignSeats
 }
