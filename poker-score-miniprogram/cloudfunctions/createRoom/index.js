@@ -56,7 +56,6 @@ exports.main = async (event) => {
 
   const now = Date.now()
   const room = {
-    _id: code,
     name: name || `牌局 ${code}`,
     hostOpenId: OPENID,
     status: 'playing',
@@ -68,5 +67,6 @@ exports.main = async (event) => {
     updatedAt: now
   }
   await db.collection('rooms').doc(code).set({ data: room })
-  return { ok: true, room, playerId: OPENID }
+  // `_id` is assigned by `doc(code)`: CloudBase rejects `_id` inside write data.
+  return { ok: true, room: { ...room, _id: code }, playerId: OPENID }
 }

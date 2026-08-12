@@ -1,13 +1,13 @@
 // 全局配置：本地模式（测试号）与云开发模式（正式号）单点切换
 module.exports = {
   // true 时启用微信云开发（需要正式 AppID + 云环境）；false 时使用本地存储模拟（测试号可用）
-  USE_CLOUD: false,
+  USE_CLOUD: true,
 
   // 云开发环境 ID，接入正式号后填写（例如 'poker-score-xxxx'）
-  CLOUD_ENV: '',
+  CLOUD_ENV: 'cloud1-d9giz9x074a74d580',
 
   // 生成小程序码时打开的版本：'release' 正式版 / 'trial' 体验版 / 'develop' 开发版
-  QR_ENV_VERSION: 'release',
+  QR_ENV_VERSION: 'trial',
 
   // 房间默认人数上限
   DEFAULT_MAX_PLAYERS: 4,
