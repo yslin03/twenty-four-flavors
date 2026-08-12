@@ -10,9 +10,9 @@
     <button class="btn btn-primary btn-block" bindtap="onCreate">创建房间</button>
     <view class="join-row">
       <input class="input join-input" placeholder="输入房间码" value="{{roomCodeInput}}" bindinput="onCodeInput" maxlength="4"></input>
-      <button class="btn btn-ghost join-btn" bindtap="onJoin">加入</button>
+      <button class="btn join-btn" bindtap="onJoin">加入</button>
     </view>
-    <button class="btn btn-ghost btn-block scan-btn" bindtap="onScan">扫码进房</button>
+    <button class="btn scan-btn" bindtap="onScan">📷 扫码进房</button>
     <button wx:if="{{showDemo}}" class="btn btn-ghost btn-block demo-btn" bindtap="onDemo">快速演示（建房 + 模拟玩家）</button>
   </view>
 

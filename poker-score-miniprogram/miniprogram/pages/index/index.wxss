@@ -36,12 +36,22 @@
   height: 88rpx;
   line-height: 88rpx;
   margin-left: 20rpx;
+  background: var(--accent);
+  color: #062018;
+  border: none;
+  border-radius: 20rpx;
+  font-weight: 600;
 }
 .demo-btn {
   margin-top: 24rpx;
 }
 .scan-btn {
   margin-top: 24rpx;
+  background: var(--surface-2);
+  color: var(--accent);
+  border: 1rpx solid rgba(53, 201, 142, 0.45);
+  border-radius: 20rpx;
+  font-weight: 600;
 }
 .career {
   margin-top: 24rpx;
