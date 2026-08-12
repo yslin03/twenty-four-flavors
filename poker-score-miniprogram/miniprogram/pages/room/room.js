@@ -18,7 +18,7 @@ Page({
     myId: '',
     isHost: false,
     panel: { show: false, player: null },
-    invite: { show: false, fileID: '', qrError: '', qrLoading: false },
+    invite: { show: false, fileID: '', qrPath: '', qrError: '', qrLoading: false },
     nicknameModal: { show: false },
     nicknameInput: '',
     voiceOn: true,
@@ -43,8 +43,12 @@ Page({
       myId: store.getMyId(),
       voiceOn: tts.isEnabled()
     })
+    this.autoInvite = options.invite === '1'
     await this.loadRoom(false)
     this.startWatch()
+    if (this.autoInvite && this.data.isHost) {
+      this.onInvite()
+    }
   },
 
   onShow() {
@@ -295,32 +299,79 @@ Page({
   },
 
   async onInvite() {
-    this.setData({ invite: { show: true, fileID: '', qrError: '', qrLoading: true } })
+    this.setData({ invite: { show: true, fileID: '', qrPath: '', qrError: '', qrLoading: true } })
     if (store.isCloud()) {
       try {
         const res = await store.getRoomQrcode({ roomCode: this.data.roomCode })
         if (res && res.fileID) {
-          this.setData({ invite: { show: true, fileID: res.fileID, qrError: '', qrLoading: false } })
+          this.setData({ invite: { show: true, fileID: res.fileID, qrPath: '', qrError: '', qrLoading: false } })
         } else {
           this.setData({
-            invite: { show: true, fileID: '', qrError: (res && res.error) || '生成小程序码失败，请用房间码或转发', qrLoading: false }
+            invite: { show: true, fileID: '', qrPath: '', qrError: (res && res.error) || '生成小程序码失败，请用房间码或转发', qrLoading: false }
           })
         }
       } catch (e) {
         this.setData({
-          invite: { show: true, fileID: '', qrError: '生成小程序码失败，请用房间码或转发', qrLoading: false }
+          invite: { show: true, fileID: '', qrPath: '', qrError: '生成小程序码失败，请用房间码或转发', qrLoading: false }
         })
       }
     } else {
-      this.setData({
-        invite: {
-          show: true,
-          fileID: '',
-          qrError: '本地模式无法生成「微信扫一扫」直达的小程序码：请将 config.js 的 USE_CLOUD 设为 true 并部署云函数后，这里会自动生成扫码直达的小程序码。当前可用房间码或转发邀请。',
-          qrLoading: false
-        }
-      })
+      try {
+        const qrPath = await this.drawLocalQr('r=' + this.data.roomCode)
+        this.setData({ invite: { show: true, fileID: '', qrPath, qrError: '', qrLoading: false } })
+      } catch (e) {
+        this.setData({
+          invite: { show: true, fileID: '', qrPath: '', qrError: '生成二维码失败，请用房间码或转发', qrLoading: false }
+        })
+      }
     }
+  },
+
+  drawLocalQr(text) {
+    return new Promise((resolve, reject) => {
+      const qrcode = require('../../utils/qrcode')
+      const qr = qrcode(0, 'M')
+      qr.addData(String(text || ''))
+      qr.make()
+      const count = qr.getModuleCount()
+      const size = 220
+      const cell = size / (count + 8)
+      wx.nextTick(() => {
+        const query = wx.createSelectorQuery().in(this)
+        query.select('#inviteQrCanvas').fields({ node: true, size: true }).exec((res) => {
+          const canvas = res && res[0] && res[0].node
+          if (!canvas) {
+            reject(new Error('canvas 不可用'))
+            return
+          }
+          canvas.width = size
+          canvas.height = size
+          const ctx = canvas.getContext('2d')
+          ctx.fillStyle = '#ffffff'
+          ctx.fillRect(0, 0, size, size)
+          ctx.fillStyle = '#000000'
+          const offset = 4 * cell
+          for (let r = 0; r < count; r++) {
+            for (let c = 0; c < count; c++) {
+              if (qr.isDark(r, c)) {
+                ctx.fillRect(offset + c * cell, offset + r * cell, Math.ceil(cell), Math.ceil(cell))
+              }
+            }
+          }
+          wx.canvasToTempFilePath({
+            canvas,
+            success: (res2) => {
+              if (res2 && res2.tempFilePath) {
+                resolve(res2.tempFilePath)
+              } else {
+                reject(new Error('导出二维码失败'))
+              }
+            },
+            fail: (err) => reject(err || new Error('导出二维码失败'))
+          }, this)
+        })
+      })
+    })
   },
 
   onInviteClose() {
@@ -342,16 +393,17 @@ Page({
 
   onSaveQr() {
     const fileID = this.data.invite.fileID
-    if (!fileID) return
+    const qrPath = this.data.invite.qrPath
     wx.showLoading({ title: '保存中', mask: true })
-    wx.cloud.downloadFile({ fileID })
-      .then(res => new Promise((resolve, reject) => {
-        wx.saveImageToPhotosAlbum({
-          filePath: res.tempFilePath,
-          success: resolve,
-          fail: reject
-        })
-      }))
+    const save = (filePath) => new Promise((resolve, reject) => {
+      wx.saveImageToPhotosAlbum({ filePath, success: resolve, fail: reject })
+    })
+    const task = fileID
+      ? wx.cloud.downloadFile({ fileID }).then(res => save(res.tempFilePath))
+      : qrPath
+        ? save(qrPath)
+        : Promise.reject(new Error('无二维码'))
+    task
       .then(() => {
         wx.hideLoading()
         wx.showToast({ title: '已保存到相册', icon: 'success' })

@@ -118,7 +118,7 @@ Page({
             players: seedPlayers
           })
           wx.hideLoading()
-          wx.redirectTo({ url: `/pages/room/room?room=${created.room.code}` })
+          wx.redirectTo({ url: `/pages/room/room?room=${created.room.code}&invite=1` })
         } catch (err) {
           wx.hideLoading()
           wx.showToast({ title: (err && err.message) || '开新局失败', icon: 'none' })

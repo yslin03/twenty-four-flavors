@@ -205,6 +205,12 @@
   text-align: center;
   margin: 24rpx 0;
 }
+.qr-canvas {
+  display: block;
+  width: 220px;
+  height: 220px;
+  margin: 28rpx auto 0;
+}
 .close-btn {
   margin-top: 20rpx;
 }

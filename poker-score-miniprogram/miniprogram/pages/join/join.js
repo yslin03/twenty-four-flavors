@@ -96,7 +96,7 @@ Page({
         ? await store.createRoom({ name: this.data.roomName, maxPlayers: this.data.maxPlayers, profile })
         : await store.joinRoom({ roomCode: this.data.roomCode, profile })
       wx.hideLoading()
-      wx.redirectTo({ url: `/pages/room/room?room=${room.code}` })
+      wx.redirectTo({ url: `/pages/room/room?room=${room.code}&invite=1` })
     } catch (err) {
       wx.hideLoading()
       this.setData({ submitting: false })
