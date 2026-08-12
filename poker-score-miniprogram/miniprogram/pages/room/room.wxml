@@ -66,16 +66,19 @@
       <view class="invite-code">{{room.code}}</view>
       <button class="btn btn-ghost btn-block" bindtap="onCopyCode">复制房间码</button>
 
-      <view class="qr-wrap" wx:if="{{invite.fileID || invite.qrPath}}">
-        <image class="qr-img" src="{{invite.fileID || invite.qrPath}}" mode="aspectFit" bindtap="onSaveQr"></image>
-        <view class="qr-tip">保存二维码，好友扫码即可加入（微信扫一扫 / 首页扫码进房）</view>
+      <view class="qr-wrap" wx:if="{{invite.fileID}}">
+        <image class="qr-img" src="{{invite.fileID}}" mode="aspectFit" bindtap="onSaveQr"></image>
+        <view class="qr-tip">保存小程序码，好友扫码即可加入（微信扫一扫 / 首页扫码进房）</view>
       </view>
-      <canvas
-        wx:elif="{{invite.qrLoading && !invite.fileID && !invite.qrPath}}"
-        type="2d"
-        id="inviteQrCanvas"
-        class="qr-canvas"
-      ></canvas>
+      <block wx:elif="{{invite.localMode}}">
+        <canvas
+          type="2d"
+          id="inviteQrCanvas"
+          class="qr-canvas"
+          bindtap="onSaveQr"
+        ></canvas>
+        <view class="qr-tip">点击保存二维码，好友用首页「扫码进房」扫码加入</view>
+      </block>
       <view class="qr-tip" wx:elif="{{invite.qrError}}">{{invite.qrError}}</view>
       <view class="qr-loading" wx:else>{{invite.qrLoading ? '生成二维码中…' : ''}}</view>
 

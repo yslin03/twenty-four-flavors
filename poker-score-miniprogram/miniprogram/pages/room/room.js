@@ -18,7 +18,7 @@ Page({
     myId: '',
     isHost: false,
     panel: { show: false, player: null },
-    invite: { show: false, fileID: '', qrPath: '', qrError: '', qrLoading: false },
+    invite: { show: false, fileID: '', localMode: false, qrError: '', qrLoading: false },
     nicknameModal: { show: false },
     nicknameInput: '',
     voiceOn: true,
@@ -299,31 +299,27 @@ Page({
   },
 
   async onInvite() {
-    this.setData({ invite: { show: true, fileID: '', qrPath: '', qrError: '', qrLoading: true } })
     if (store.isCloud()) {
+      this.setData({ invite: { show: true, fileID: '', localMode: false, qrError: '', qrLoading: true } })
       try {
         const res = await store.getRoomQrcode({ roomCode: this.data.roomCode })
         if (res && res.fileID) {
-          this.setData({ invite: { show: true, fileID: res.fileID, qrPath: '', qrError: '', qrLoading: false } })
+          this.setData({ invite: { show: true, fileID: res.fileID, localMode: false, qrError: '', qrLoading: false } })
         } else {
           this.setData({
-            invite: { show: true, fileID: '', qrPath: '', qrError: (res && res.error) || '生成小程序码失败，请用房间码或转发', qrLoading: false }
+            invite: { show: true, fileID: '', localMode: false, qrError: (res && res.error) || '生成小程序码失败，请用房间码或转发', qrLoading: false }
           })
         }
       } catch (e) {
         this.setData({
-          invite: { show: true, fileID: '', qrPath: '', qrError: '生成小程序码失败，请用房间码或转发', qrLoading: false }
+          invite: { show: true, fileID: '', localMode: false, qrError: '生成小程序码失败，请用房间码或转发', qrLoading: false }
         })
       }
     } else {
-      try {
-        const qrPath = await this.drawLocalQr('r=' + this.data.roomCode)
-        this.setData({ invite: { show: true, fileID: '', qrPath, qrError: '', qrLoading: false } })
-      } catch (e) {
-        this.setData({
-          invite: { show: true, fileID: '', qrPath: '', qrError: '生成二维码失败，请用房间码或转发', qrLoading: false }
-        })
-      }
+      this.setData({ invite: { show: true, fileID: '', localMode: true, qrError: '', qrLoading: false } })
+      this.drawLocalQr('r=' + this.data.roomCode).catch(() => {
+        this.setData({ invite: { show: true, fileID: '', localMode: false, qrError: '生成二维码失败，请用房间码或转发', qrLoading: false } })
+      })
     }
   },
 
@@ -358,17 +354,7 @@ Page({
               }
             }
           }
-          wx.canvasToTempFilePath({
-            canvas,
-            success: (res2) => {
-              if (res2 && res2.tempFilePath) {
-                resolve(res2.tempFilePath)
-              } else {
-                reject(new Error('导出二维码失败'))
-              }
-            },
-            fail: (err) => reject(err || new Error('导出二维码失败'))
-          }, this)
+          resolve()
         })
       })
     })
@@ -393,25 +379,57 @@ Page({
 
   onSaveQr() {
     const fileID = this.data.invite.fileID
-    const qrPath = this.data.invite.qrPath
+    if (fileID) {
+      wx.showLoading({ title: '保存中', mask: true })
+      wx.cloud.downloadFile({ fileID })
+        .then(res => new Promise((resolve, reject) => {
+          wx.saveImageToPhotosAlbum({
+            filePath: res.tempFilePath,
+            success: resolve,
+            fail: reject
+          })
+        }))
+        .then(() => {
+          wx.hideLoading()
+          wx.showToast({ title: '已保存到相册', icon: 'success' })
+        })
+        .catch(() => {
+          wx.hideLoading()
+          wx.showToast({ title: '保存失败，请长按图片保存', icon: 'none' })
+        })
+      return
+    }
+    // 本地模式：从画布导出后保存
     wx.showLoading({ title: '保存中', mask: true })
-    const save = (filePath) => new Promise((resolve, reject) => {
-      wx.saveImageToPhotosAlbum({ filePath, success: resolve, fail: reject })
-    })
-    const task = fileID
-      ? wx.cloud.downloadFile({ fileID }).then(res => save(res.tempFilePath))
-      : qrPath
-        ? save(qrPath)
-        : Promise.reject(new Error('无二维码'))
-    task
-      .then(() => {
-        wx.hideLoading()
-        wx.showToast({ title: '已保存到相册', icon: 'success' })
-      })
-      .catch(() => {
+    const query = wx.createSelectorQuery().in(this)
+    query.select('#inviteQrCanvas').fields({ node: true }).exec((res) => {
+      const canvas = res && res[0] && res[0].node
+      if (!canvas) {
         wx.hideLoading()
         wx.showToast({ title: '保存失败，请长按图片保存', icon: 'none' })
-      })
+        return
+      }
+      wx.canvasToTempFilePath({
+        canvas,
+        success: (res2) => {
+          wx.saveImageToPhotosAlbum({
+            filePath: res2.tempFilePath,
+            success: () => {
+              wx.hideLoading()
+              wx.showToast({ title: '已保存到相册', icon: 'success' })
+            },
+            fail: () => {
+              wx.hideLoading()
+              wx.showToast({ title: '保存失败，请长按图片保存', icon: 'none' })
+            }
+          })
+        },
+        fail: () => {
+          wx.hideLoading()
+          wx.showToast({ title: '保存失败，请长按图片保存', icon: 'none' })
+        }
+      }, this)
+    })
   },
 
   noop() {},
